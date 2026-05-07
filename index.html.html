@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LITOR Arquitetura — Orçamento</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --off:   #F4F1EC;
+  --areia: #C8B79C;
+  --verde: #3F4A3C;
+  --preto: #2B2B26;
+  --fundo: #EDE9E2;
+  --borda: rgba(43,43,38,.12);
+  --b2:    rgba(43,43,38,.22);
+  --t2:    #7A766F;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--off);color:var(--preto);font-family:'Jost',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden;}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.02;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");}
+
+/* ── TELA FORMULÁRIO ── */
+#telaFormulario{display:block;}
+#telaProposta{display:none;}
+
+.wrap{max-width:640px;margin:0 auto;padding:0 28px 100px;position:relative;z-index:1;}
+
+.header{padding:60px 0 44px;text-align:center;}
+.logo-bloco{display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:28px;}
+.logo-nome{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;letter-spacing:12px;color:var(--preto);line-height:1;}
+.logo-sub{font-family:'Jost',sans-serif;font-size:9px;font-weight:300;letter-spacing:7px;text-transform:uppercase;color:var(--areia);}
+.hd{width:1px;height:44px;background:linear-gradient(to bottom,var(--areia),transparent);margin:0 auto 22px;opacity:.45;}
+.hh{font-family:'Cormorant Garamond',serif;font-size:clamp(24px,6vw,36px);font-weight:300;line-height:1.15;color:var(--preto);}
+.hh em{font-style:italic;color:var(--areia);}
+.hp{font-size:13px;font-weight:300;color:var(--t2);margin-top:10px;line-height:1.7;}
+
+.prog-wrap{display:flex;align-items:center;gap:12px;margin-bottom:48px;}
+.prog-bar{flex:1;height:1px;background:var(--borda);overflow:hidden;}
+.prog-fill{height:100%;background:var(--areia);transition:width .6s cubic-bezier(.4,0,.2,1);width:0%;}
+.prog-lbl{font-size:10px;font-weight:300;letter-spacing:2px;color:var(--areia);white-space:nowrap;}
+
+.step{display:none;}
+.step.active{display:block;animation:up .42s cubic-bezier(.4,0,.2,1) forwards;opacity:0;}
+@keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+.se{font-size:9px;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--areia);margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+.se::before{content:'';width:20px;height:1px;background:var(--areia);opacity:.5;}
+.sq{font-family:'Cormorant Garamond',serif;font-size:clamp(22px,5vw,30px);font-weight:300;color:var(--preto);line-height:1.2;margin-bottom:6px;}
+.sh{font-size:13px;font-weight:300;color:var(--t2);margin-bottom:26px;line-height:1.6;}
+
+.cards{display:grid;gap:1px;}
+.cards.dois{grid-template-columns:1fr 1fr;}
+.card{background:white;border:1px solid var(--borda);padding:18px 20px;cursor:pointer;position:relative;transition:all .2s;}
+.card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--areia);transform:scaleY(0);transform-origin:bottom;transition:transform .2s;}
+.card:hover{border-color:var(--b2);transform:translateX(3px);}
+.card.sel{border-color:var(--areia);background:var(--off);}
+.card.sel::before{transform:scaleY(1);}
+.ck{position:absolute;top:14px;right:14px;width:16px;height:16px;border-radius:50%;border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;font-size:8px;color:transparent;transition:all .2s;}
+.card.sel .ck,.seg-card.msel .ck{background:var(--areia);border-color:var(--areia);color:white;}
+.ci{font-size:18px;margin-bottom:8px;display:block;}
+.ct{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:400;color:var(--preto);margin-bottom:3px;}
+.cd{font-size:12px;font-weight:300;color:var(--t2);line-height:1.4;}
+
+.an{font-family:'Cormorant Garamond',serif;font-size:56px;font-weight:300;color:var(--preto);line-height:1;margin-bottom:4px;}
+.ar{font-size:13px;font-style:italic;color:var(--areia);margin-bottom:18px;min-height:20px;}
+input[type=range]{width:100%;-webkit-appearance:none;height:1px;background:var(--b2);outline:none;margin:4px 0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--preto);cursor:pointer;}
+.sl{display:flex;justify-content:space-between;font-size:10px;color:var(--t2);margin-top:6px;}
+.av{margin-top:22px;border:1px solid var(--borda);background:white;padding:18px;}
+.avl{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--areia);margin-bottom:12px;}
+.cw{position:relative;display:flex;align-items:center;justify-content:center;}
+#aC{display:block;max-width:100%;}
+.ct2{position:absolute;font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:300;color:white;text-shadow:0 1px 4px rgba(0,0,0,.3);pointer-events:none;}
+.comps{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.comp{font-size:10px;font-weight:300;color:var(--t2);border:1px solid var(--borda);padding:3px 10px;transition:all .2s;}
+.comp.on{border-color:var(--areia);color:var(--areia);}
+
+.campo{margin-bottom:16px;}
+.cl{display:block;font-size:9px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--areia);margin-bottom:8px;}
+.fi,.fs,.ft{width:100%;border:1px solid var(--borda);background:white;padding:13px 16px;font-family:'Jost',sans-serif;font-size:15px;font-weight:300;color:var(--preto);outline:none;transition:border-color .2s;appearance:none;}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--areia);}
+.fs{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23C8B79C' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+.ft{resize:vertical;min-height:88px;line-height:1.6;}
+
+.sg{display:grid;gap:1px;}
+.seg-card{background:white;border:1px solid var(--borda);padding:16px 20px;cursor:pointer;position:relative;transition:all .2s;}
+.seg-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--verde);transform:scaleY(0);transform-origin:bottom;transition:transform .2s;}
+.seg-card:hover{border-color:var(--b2);}
+.seg-card.msel{border-color:var(--areia);background:var(--off);}
+.seg-card.msel::before{transform:scaleY(1);}
+.seg-card .ck{top:50%;right:14px;transform:translateY(-50%);}
+.st{font-size:14px;font-weight:300;color:var(--preto);line-height:1.3;}
+.sd{font-size:12px;font-weight:300;color:var(--t2);margin-top:2px;}
+.sl2{background:white;border:1px solid var(--borda);padding:14px 18px;margin-top:1px;}
+.sl2 textarea{width:100%;border:none;outline:none;resize:none;font-family:'Jost',sans-serif;font-size:14px;font-weight:300;color:var(--preto);background:transparent;line-height:1.6;min-height:60px;}
+.sl2 textarea::placeholder{color:var(--t2);}
+
+.bav{width:100%;background:var(--preto);color:var(--off);border:none;padding:17px 32px;font-family:'Jost',sans-serif;font-size:11px;font-weight:400;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .25s;margin-top:26px;}
+.bav:hover{background:var(--verde);transform:translateY(-1px);}
+.bvt{background:none;border:none;font-family:'Jost',sans-serif;font-size:10px;font-weight:300;letter-spacing:2px;color:var(--t2);cursor:pointer;margin-top:12px;text-decoration:underline;text-underline-offset:3px;display:block;text-align:center;}
+.avi{font-size:11px;color:#A04030;margin-top:6px;display:none;}
+
+/* ── STEP 8 RESULTADO FORMULÁRIO ── */
+.rh{padding:36px 0 24px;border-bottom:1px solid var(--borda);margin-bottom:24px;}
+.rt{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--areia);margin-bottom:8px;}
+.rn{font-family:'Cormorant Garamond',serif;font-size:clamp(26px,5vw,38px);font-weight:300;color:var(--preto);line-height:1.1;}
+.rl{font-size:13px;font-weight:300;color:var(--t2);margin-top:4px;}
+.rrow{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--borda);font-size:14px;}
+.rrow:last-of-type{border:none;}
+.rlbl{font-weight:300;color:var(--t2);}
+.rval{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--preto);text-align:right;max-width:55%;}
+.rtotal{margin-top:18px;padding:28px 32px;background:var(--preto);display:flex;justify-content:space-between;align-items:center;}
+.rtl{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--areia);opacity:.7;}
+.rtl span{display:block;font-size:10px;color:rgba(200,183,156,.35);margin-top:3px;}
+.rtv{font-family:'Cormorant Garamond',serif;font-size:clamp(22px,5vw,34px);font-weight:300;color:var(--off);}
+.robs{font-size:11px;font-weight:300;font-style:italic;color:var(--t2);margin-top:12px;line-height:1.7;}
+.orn{text-align:center;color:var(--areia);opacity:.3;font-size:12px;letter-spacing:10px;margin:26px 0;}
+
+/* botões resultado */
+.btn-prop{width:100%;background:var(--verde);color:white;border:none;padding:17px 32px;font-family:'Jost',sans-serif;font-size:11px;font-weight:400;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .25s;margin-top:18px;display:flex;align-items:center;justify-content:center;gap:10px;}
+.btn-prop:hover{background:#2E3A2B;transform:translateY(-1px);}
+.btn-wpp{width:100%;background:white;color:var(--preto);border:1px solid var(--b2);padding:15px 32px;font-family:'Jost',sans-serif;font-size:11px;font-weight:400;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .25s;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;}
+.btn-wpp:hover{border-color:var(--preto);}
+.btn-novo{width:100%;background:none;border:1px solid var(--borda);padding:13px 32px;font-family:'Jost',sans-serif;font-size:10px;font-weight:300;letter-spacing:3px;text-transform:uppercase;color:var(--t2);cursor:pointer;transition:all .2s;margin-top:8px;}
+.btn-novo:hover{border-color:var(--preto);color:var(--preto);}
+
+/* status salvamento */
+.save-status{text-align:center;font-size:12px;font-weight:300;color:var(--t2);margin-top:12px;min-height:20px;transition:all .3s;}
+.save-status.ok{color:var(--verde);}
+.save-status.err{color:#A04030;}
+
+@media(max-width:480px){.cards.dois{grid-template-columns:1fr;}.rtotal{flex-direction:column;gap:8px;text-align:center;}}
+
+/* ══════════════════════════════════════
+   PROPOSTA COMERCIAL
+══════════════════════════════════════ */
+#telaProposta{
+  background:var(--off);
+  min-height:100vh;
+}
+
+.prop-wrap{max-width:800px;margin:0 auto;padding:0 40px 80px;}
+
+/* Capa da proposta */
+.prop-capa{
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  justify-content:space-between;
+  padding:64px 0;
+  border-bottom:1px solid var(--borda);
+  position:relative;
+  overflow:hidden;
+}
+.prop-capa::before{
+  content:'';position:absolute;right:-100px;top:50%;transform:translateY(-50%);
+  width:500px;height:500px;border-radius:50%;
+  border:1px solid rgba(200,183,156,.08);
+}
+.prop-capa::after{
+  content:'';position:absolute;right:-60px;top:50%;transform:translateY(-50%);
+  width:360px;height:360px;border-radius:50%;
+  border:1px solid rgba(200,183,156,.06);
+}
+
+.prop-header-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.prop-logo-nome{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;letter-spacing:8px;color:var(--preto);}
+.prop-logo-sub{font-size:8px;letter-spacing:5px;text-transform:uppercase;color:var(--areia);margin-top:3px;font-family:'Jost',sans-serif;font-weight:300;}
+.prop-doc-info{text-align:right;}
+.prop-doc-tipo{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--areia);margin-bottom:4px;}
+.prop-doc-num{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;color:var(--preto);}
+
+.prop-capa-centro{position:relative;z-index:1;padding:80px 0 60px;}
+.prop-pre{font-size:9px;letter-spacing:5px;text-transform:uppercase;color:var(--areia);margin-bottom:16px;opacity:.7;}
+.prop-titulo{font-family:'Cormorant Garamond',serif;font-size:clamp(40px,6vw,68px);font-weight:300;line-height:.95;color:var(--preto);}
+.prop-titulo em{font-style:italic;color:var(--areia);}
+.prop-para{margin-top:32px;padding-left:24px;border-left:2px solid var(--areia);}
+.prop-para-nome{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--preto);}
+.prop-para-det{font-size:12px;font-weight:300;color:var(--t2);margin-top:4px;letter-spacing:.5px;}
+
+.prop-capa-rodape{display:flex;justify-content:space-between;align-items:flex-end;}
+.prop-data{font-size:11px;font-weight:300;color:var(--t2);letter-spacing:1px;}
+.prop-validade{font-size:11px;font-weight:300;color:var(--t2);}
+.prop-validade strong{color:var(--preto);font-weight:400;}
+
+/* Seções da proposta */
+.ps{padding:72px 0;border-bottom:1px solid var(--borda);}
+.ps:last-child{border:none;}
+.ps-eye{font-size:9px;letter-spacing:5px;text-transform:uppercase;color:var(--areia);margin-bottom:20px;display:flex;align-items:center;gap:12px;}
+.ps-eye::before{content:'';width:24px;height:1px;background:var(--areia);opacity:.5;}
+.ps-h{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,4vw,46px);font-weight:300;color:var(--preto);line-height:1.05;margin-bottom:32px;}
+.ps-h em{font-style:italic;color:var(--areia);}
+.ps-p{font-size:14px;font-weight:300;color:var(--t2);line-height:1.9;margin-bottom:16px;}
+.ps-p strong{color:var(--preto);font-weight:400;}
+
+/* Destaque manifesto */
+.prop-manifesto{padding:36px 40px;background:var(--preto);margin:32px 0;}
+.prop-manifesto-txt{font-family:'Cormorant Garamond',serif;font-size:clamp(18px,2.5vw,26px);font-weight:300;font-style:italic;color:var(--off);line-height:1.5;}
+.prop-manifesto-ref{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--areia);opacity:.5;margin-top:16px;}
+
+/* Grid o que fazemos */
+.prop-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin:32px 0;}
+.pg-item{padding:28px 24px;background:white;border:1px solid var(--borda);}
+.pg-item.destaque{background:var(--verde);border-color:var(--verde);}
+.pg-ico{font-size:20px;margin-bottom:12px;display:block;}
+.pg-t{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;color:var(--preto);margin-bottom:6px;}
+.pg-d{font-size:12px;font-weight:300;color:var(--t2);line-height:1.5;}
+.pg-item.destaque .pg-t{color:var(--off);}
+.pg-item.destaque .pg-d{color:rgba(244,241,236,.6);}
+
+/* Listas sim/não */
+.prop-listas{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin:32px 0;}
+.pl{padding:32px;}
+.pl.sim{background:white;border:1px solid var(--borda);}
+.pl.nao{background:var(--fundo);border:1px solid var(--borda);}
+.pl-titulo{font-size:9px;letter-spacing:4px;text-transform:uppercase;margin-bottom:20px;}
+.pl.sim .pl-titulo{color:var(--verde);}
+.pl.nao .pl-titulo{color:#A04030;}
+.pl-item{display:flex;gap:10px;margin-bottom:12px;font-size:13px;font-weight:300;color:var(--t2);line-height:1.5;}
+.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.dot-v{background:var(--verde);}
+.dot-r{background:#A04030;}
+
+/* Etapas */
+.prop-etapas{display:flex;flex-direction:column;gap:1px;margin:32px 0;}
+.pe{display:grid;grid-template-columns:60px 1fr;gap:24px;padding:24px 0;border-bottom:1px solid var(--borda);align-items:start;}
+.pe:last-child{border:none;}
+.pe-num{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;color:var(--areia);opacity:.4;line-height:1;}
+.pe-t{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--preto);margin-bottom:6px;}
+.pe-d{font-size:13px;font-weight:300;color:var(--t2);line-height:1.6;}
+
+/* Box de valores */
+.prop-valor-box{background:var(--preto);padding:48px;margin:32px 0;}
+.pvb-pre{font-size:9px;letter-spacing:5px;text-transform:uppercase;color:var(--areia);opacity:.6;margin-bottom:16px;}
+.pvb-projeto{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:300;color:rgba(244,241,236,.5);margin-bottom:8px;}
+.pvb-val{font-family:'Cormorant Garamond',serif;font-size:clamp(36px,6vw,56px);font-weight:300;color:var(--off);line-height:1;margin-bottom:32px;}
+.pvb-div{height:1px;background:rgba(200,183,156,.12);margin-bottom:32px;}
+.pvb-pgto{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+.pvb-p{padding:24px;border:1px solid rgba(200,183,156,.12);}
+.pvb-p-num{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--areia);opacity:.5;margin-bottom:8px;}
+.pvb-p-pct{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--off);line-height:1;margin-bottom:6px;}
+.pvb-p-txt{font-size:12px;font-weight:300;color:rgba(244,241,236,.45);line-height:1.5;}
+.pvb-obs{margin-top:24px;font-size:12px;font-weight:300;color:rgba(200,183,156,.4);font-style:italic;line-height:1.7;}
+
+/* Prazo e entregáveis */
+.prop-entregas{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;margin:32px 0;}
+.pent{padding:24px 20px;background:white;border:1px solid var(--borda);}
+.pent-n{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--areia);margin-bottom:8px;}
+.pent-v{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--preto);margin-bottom:4px;}
+.pent-d{font-size:12px;font-weight:300;color:var(--t2);}
+
+/* CTA final */
+.prop-cta{background:var(--verde);padding:56px 48px;margin-top:48px;}
+.prop-cta-h{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,42px);font-weight:300;color:var(--off);line-height:1.1;margin-bottom:20px;}
+.prop-cta-p{font-size:14px;font-weight:300;color:rgba(244,241,236,.65);line-height:1.8;margin-bottom:32px;}
+.prop-cta-contato{display:flex;flex-direction:column;gap:8px;}
+.prop-cta-item{font-size:14px;font-weight:300;color:rgba(244,241,236,.7);letter-spacing:.5px;}
+.prop-cta-item strong{color:var(--off);font-weight:400;}
+
+/* Rodapé proposta */
+.prop-footer{padding:40px 0;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--borda);margin-top:0;}
+.pf-logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;letter-spacing:6px;color:var(--preto);}
+.pf-info{font-size:11px;font-weight:300;color:var(--t2);text-align:right;line-height:1.8;}
+
+/* Botões de ação da proposta */
+.prop-acoes{display:flex;gap:8px;margin:32px 0;flex-wrap:wrap;}
+.btn-imprimir{flex:1;min-width:200px;background:var(--preto);color:var(--off);border:none;padding:16px 28px;font-family:'Jost',sans-serif;font-size:11px;font-weight:400;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-imprimir:hover{background:var(--verde);}
+.btn-wpp2{flex:1;min-width:200px;background:var(--verde);color:white;border:none;padding:16px 28px;font-family:'Jost',sans-serif;font-size:11px;font-weight:400;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;}
+.btn-wpp2:hover{background:#2E3A2B;}
+.btn-voltar2{background:none;border:1px solid var(--borda);padding:16px 28px;font-family:'Jost',sans-serif;font-size:10px;font-weight:300;letter-spacing:3px;text-transform:uppercase;color:var(--t2);cursor:pointer;transition:all .2s;}
+.btn-voltar2:hover{border-color:var(--preto);color:var(--preto);}
+.save-status2{font-size:12px;font-weight:300;color:var(--t2);text-align:center;margin-top:8px;min-height:18px;}
+.save-status2.ok{color:var(--verde);}
+
+@media print{
+  #telaFormulario{display:none!important;}
+  .prop-acoes,.btn-imprimir,.btn-wpp2,.btn-voltar2,.save-status2{display:none!important;}
+  body::after{display:none;}
+  .prop-wrap{padding:0;}
+  .prop-capa{min-height:auto;padding:32px 0;}
+}
+@media(max-width:600px){
+  .prop-wrap{padding:0 20px 60px;}
+  .prop-grid,.prop-listas,.pvb-pgto,.prop-entregas{grid-template-columns:1fr;}
+  .prop-acoes{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════
+     TELA 1 — FORMULÁRIO
+══════════════════════ -->
+<div id="telaFormulario">
+<div class="wrap">
+
+<div class="header">
+  <div class="logo-bloco">
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="88" zoomAndPan="magnify" viewBox="527 185 388 388" height="88" preserveAspectRatio="xMidYMid meet" version="1.0"><defs><clipPath id="8fd015a95a"><path d="M 0.726562 0.183594 L 385.722656 0.183594 L 385.722656 385 L 0.726562 385 Z M 0.726562 0.183594 " clip-rule="nonzero"/></clipPath><clipPath id="a52134c183"><path d="M 73.796875 52.691406 L 311.832031 52.691406 L 311.832031 332.125 L 73.796875 332.125 Z M 73.796875 52.691406 " clip-rule="nonzero"/></clipPath><clipPath id="081f7bd587"><rect x="0" width="388" y="0" height="388"/></clipPath></defs><g transform="matrix(1, 0, 0, 1, 527, 185)"><g clip-path="url(#081f7bd587)"><g clip-path="url(#8fd015a95a)"><path fill="#f4f1ec" d="M 385.269531 192.453125 C 385.269531 195.601562 385.195312 198.746094 385.039062 201.886719 C 384.886719 205.03125 384.652344 208.167969 384.34375 211.300781 C 384.035156 214.429688 383.652344 217.554688 383.191406 220.667969 C 382.726562 223.777344 382.191406 226.878906 381.578125 229.964844 C 380.960938 233.050781 380.273438 236.121094 379.507812 239.171875 C 378.746094 242.222656 377.90625 245.257812 376.992188 248.265625 C 376.078125 251.277344 375.09375 254.265625 374.03125 257.226562 C 372.972656 260.191406 371.839844 263.125 370.636719 266.03125 C 369.429688 268.941406 368.15625 271.816406 366.8125 274.660156 C 365.464844 277.503906 364.050781 280.316406 362.566406 283.089844 C 361.085938 285.867188 359.535156 288.601562 357.917969 291.300781 C 356.296875 294 354.617188 296.65625 352.867188 299.273438 C 351.121094 301.890625 349.308594 304.460938 347.433594 306.988281 C 345.558594 309.515625 343.625 311.996094 341.628906 314.429688 C 339.632812 316.863281 337.578125 319.246094 335.464844 321.574219 C 333.351562 323.90625 331.179688 326.1875 328.957031 328.410156 C 326.730469 330.636719 324.453125 332.804688 322.121094 334.917969 C 319.789062 337.03125 317.40625 339.085938 314.976562 341.082031 C 312.542969 343.078125 310.0625 345.015625 307.535156 346.886719 C 305.007812 348.761719 302.4375 350.574219 299.820312 352.320312 C 297.203125 354.070312 294.546875 355.753906 291.847656 357.371094 C 289.148438 358.988281 286.410156 360.539062 283.636719 362.023438 C 280.859375 363.507812 278.050781 364.921875 275.207031 366.265625 C 272.363281 367.609375 269.484375 368.886719 266.578125 370.089844 C 263.671875 371.292969 260.738281 372.425781 257.773438 373.488281 C 254.8125 374.546875 251.824219 375.535156 248.8125 376.445312 C 245.800781 377.359375 242.769531 378.199219 239.71875 378.964844 C 236.664062 379.726562 233.597656 380.417969 230.507812 381.03125 C 227.421875 381.644531 224.324219 382.183594 221.210938 382.644531 C 218.097656 383.105469 214.976562 383.492188 211.84375 383.800781 C 208.714844 384.109375 205.578125 384.339844 202.433594 384.496094 C 199.289062 384.648438 196.144531 384.726562 193 384.726562 C 189.851562 384.726562 186.707031 384.648438 183.566406 384.496094 C 180.421875 384.339844 177.285156 384.109375 174.152344 383.800781 C 171.023438 383.492188 167.898438 383.105469 164.785156 382.644531 C 161.675781 382.183594 158.574219 381.644531 155.488281 381.03125 C 152.402344 380.417969 149.332031 379.726562 146.28125 378.964844 C 143.230469 378.199219 140.195312 377.359375 137.1875 376.445312 C 134.175781 375.535156 131.1875 374.546875 128.226562 373.488281 C 125.261719 372.425781 122.328125 371.292969 119.421875 370.089844 C 116.511719 368.886719 113.636719 367.609375 110.792969 366.265625 C 107.949219 364.921875 105.136719 363.507812 102.363281 362.023438 C 99.585938 360.539062 96.851562 358.988281 94.152344 357.371094 C 91.453125 355.753906 88.796875 354.070312 86.179688 352.320312 C 83.5625 350.574219 80.992188 348.761719 78.464844 346.886719 C 75.933594 345.015625 73.457031 343.078125 71.023438 341.082031 C 68.589844 339.085938 66.207031 337.03125 63.878906 334.917969 C 61.546875 332.804688 59.265625 330.636719 57.042969 328.410156 C 54.816406 326.1875 52.648438 323.90625 50.535156 321.574219 C 48.421875 319.246094 46.367188 316.863281 44.371094 314.429688 C 42.375 311.996094 40.4375 309.515625 38.566406 306.988281 C 36.691406 304.460938 34.878906 301.890625 33.132812 299.273438 C 31.382812 296.65625 29.699219 294 28.082031 291.300781 C 26.464844 288.601562 24.914062 285.867188 23.429688 283.089844 C 21.945312 280.316406 20.53125 277.503906 19.1875 274.660156 C 17.84375 271.816406 16.566406 268.941406 15.363281 266.03125 C 14.160156 263.125 13.027344 260.191406 11.964844 257.226562 C 10.90625 254.265625 9.917969 251.277344 9.007812 248.265625 C 8.09375 245.257812 7.253906 242.222656 6.488281 239.171875 C 5.726562 236.121094 5.035156 233.050781 4.421875 229.964844 C 3.808594 226.878906 3.269531 223.777344 2.808594 220.667969 C 2.347656 217.554688 1.960938 214.429688 1.652344 211.300781 C 1.34375 208.167969 1.113281 205.03125 0.957031 201.886719 C 0.804688 198.746094 0.726562 195.601562 0.726562 192.453125 C 0.726562 189.308594 0.804688 186.164062 0.957031 183.019531 C 1.113281 179.875 1.34375 176.738281 1.652344 173.609375 C 1.960938 170.476562 2.347656 167.355469 2.808594 164.242188 C 3.269531 161.128906 3.808594 158.03125 4.421875 154.945312 C 5.035156 151.855469 5.726562 148.789062 6.488281 145.734375 C 7.253906 142.683594 8.09375 139.652344 9.007812 136.640625 C 9.917969 133.628906 10.90625 130.640625 11.964844 127.679688 C 13.027344 124.714844 14.160156 121.78125 15.363281 118.875 C 16.566406 115.96875 17.84375 113.089844 19.1875 110.246094 C 20.53125 107.402344 21.945312 104.59375 23.429688 101.816406 C 24.914062 99.042969 26.464844 96.304688 28.082031 93.605469 C 29.699219 90.90625 31.382812 88.25 33.132812 85.632812 C 34.878906 83.015625 36.691406 80.445312 38.566406 77.917969 C 40.4375 75.390625 42.375 72.910156 44.371094 70.476562 C 46.367188 68.046875 48.421875 65.664062 50.535156 63.332031 C 52.648438 61 54.816406 58.722656 57.042969 56.496094 C 59.265625 54.273438 61.546875 52.101562 63.878906 49.988281 C 66.207031 47.875 68.589844 45.820312 71.023438 43.824219 C 73.457031 41.828125 75.933594 39.894531 78.464844 38.019531 C 80.992188 36.144531 83.5625 34.332031 86.179688 32.585938 C 88.796875 30.835938 91.453125 29.15625 94.152344 27.535156 C 96.851562 25.917969 99.585938 24.367188 102.363281 22.886719 C 105.136719 21.402344 107.949219 19.988281 110.792969 18.640625 C 113.636719 17.296875 116.511719 16.023438 119.421875 14.816406 C 122.328125 13.613281 125.261719 12.480469 128.226562 11.421875 C 131.1875 10.359375 134.175781 9.375 137.1875 8.460938 C 140.195312 7.546875 143.230469 6.707031 146.28125 5.945312 C 149.332031 5.179688 152.402344 4.492188 155.488281 3.875 C 158.574219 3.261719 161.675781 2.726562 164.785156 2.261719 C 167.898438 1.800781 171.023438 1.417969 174.152344 1.109375 C 177.285156 0.800781 180.421875 0.566406 183.566406 0.414062 C 186.707031 0.257812 189.851562 0.183594 193 0.183594 C 196.144531 0.183594 199.289062 0.257812 202.433594 0.414062 C 205.578125 0.566406 208.714844 0.800781 211.84375 1.109375 C 214.976562 1.417969 218.097656 1.800781 221.210938 2.261719 C 224.324219 2.726562 227.421875 3.261719 230.507812 3.875 C 233.597656 4.492188 236.664062 5.179688 239.71875 5.945312 C 242.769531 6.707031 245.800781 7.546875 248.8125 8.460938 C 251.824219 9.375 254.8125 10.359375 257.773438 11.421875 C 260.738281 12.480469 263.671875 13.613281 266.578125 14.816406 C 269.484375 16.023438 272.363281 17.296875 275.207031 18.640625 C 278.050781 19.988281 280.859375 21.402344 283.636719 22.886719 C 286.410156 24.367188 289.148438 25.917969 291.847656 27.535156 C 294.546875 29.15625 297.203125 30.835938 299.820312 32.585938 C 302.4375 34.332031 305.007812 36.144531 307.535156 38.019531 C 310.0625 39.894531 312.542969 41.828125 314.976562 43.824219 C 317.40625 45.820312 319.789062 47.875 322.121094 49.988281 C 324.453125 52.101562 326.730469 54.273438 328.957031 56.496094 C 331.179688 58.722656 333.351562 61 335.464844 63.332031 C 337.578125 65.664062 339.632812 68.046875 341.628906 70.476562 C 343.625 72.910156 345.558594 75.390625 347.433594 77.917969 C 349.308594 80.445312 351.121094 83.015625 352.867188 85.632812 C 354.617188 88.25 356.296875 90.90625 357.917969 93.605469 C 359.535156 96.304688 361.085938 99.042969 362.566406 101.816406 C 364.050781 104.59375 365.464844 107.402344 366.8125 110.246094 C 368.15625 113.089844 369.429688 115.96875 370.636719 118.875 C 371.839844 121.78125 372.972656 124.714844 374.03125 127.679688 C 375.09375 130.640625 376.078125 133.628906 376.992188 136.640625 C 377.90625 139.652344 378.746094 142.683594 379.507812 145.734375 C 380.273438 148.789062 380.960938 151.855469 381.578125 154.945312 C 382.191406 158.03125 382.726562 161.128906 383.191406 164.242188 C 383.652344 167.355469 384.035156 170.476562 384.34375 173.609375 C 384.652344 176.738281 384.886719 179.875 385.039062 183.019531 C 385.195312 186.164062 385.269531 189.308594 385.269531 192.453125 Z M 385.269531 192.453125 " fill-opacity="1" fill-rule="nonzero"/></g><path fill="#1c1c1c" d="M 193 366.386719 C 97.007812 366.386719 19.066406 288.445312 19.066406 192.453125 C 19.066406 96.460938 97.007812 18.519531 193 18.519531 C 288.992188 18.519531 366.933594 96.460938 366.933594 192.453125 C 366.933594 288.445312 288.992188 366.386719 193 366.386719 Z M 193 22.820312 C 99.300781 22.820312 23.363281 98.753906 23.363281 192.453125 C 23.363281 286.152344 99.585938 362.089844 193 362.089844 C 286.699219 362.089844 362.632812 285.867188 362.632812 192.453125 C 362.632812 98.753906 286.699219 22.820312 193 22.820312 Z M 193 22.820312 " fill-opacity="1" fill-rule="nonzero"/><g clip-path="url(#a52134c183)"><path fill="#1c1c1c" d="M 305.546875 146.269531 C 302.398438 133.671875 293.367188 123.257812 281.359375 118.355469 C 286.3125 112.910156 292.769531 109.03125 300.003906 107.222656 L 312.152344 104.183594 L 300.695312 96.542969 C 293.054688 91.449219 284.148438 88.757812 274.933594 88.757812 L 274.648438 88.757812 C 267.703125 88.757812 260.75 90.398438 254.539062 93.507812 L 252.320312 94.617188 C 253.324219 89.425781 255.355469 84.46875 258.328125 80.003906 L 264.515625 70.726562 L 249.207031 70.726562 C 238.753906 70.726562 228.296875 72.585938 218.464844 76.152344 L 226.285156 52.691406 L 218.25 52.691406 C 208.589844 52.691406 199.503906 56.660156 192.980469 63.527344 C 186.457031 56.660156 177.371094 52.691406 167.710938 52.691406 L 159.679688 52.691406 L 167.496094 76.152344 C 157.667969 72.585938 147.207031 70.726562 136.757812 70.726562 L 121.445312 70.726562 L 127.632812 80.003906 C 130.605469 84.46875 132.636719 89.425781 133.640625 94.617188 L 131.421875 93.507812 C 125.210938 90.398438 118.257812 88.757812 111.3125 88.757812 L 111.027344 88.757812 C 101.8125 88.757812 92.90625 91.449219 85.269531 96.542969 L 73.808594 104.183594 L 85.957031 107.222656 C 93.191406 109.03125 99.648438 112.914062 104.601562 118.355469 C 92.59375 123.261719 83.5625 133.675781 80.414062 146.269531 L 78.59375 153.558594 L 95.398438 149.355469 C 91.347656 160.285156 89.296875 171.734375 89.296875 183.425781 L 89.296875 194.308594 L 96.992188 186.613281 C 102.046875 181.554688 107.886719 177.566406 114.238281 174.753906 C 109.738281 182.84375 107.328125 191.984375 107.328125 201.457031 L 107.328125 210.472656 L 126.179688 196.335938 C 127.609375 202.847656 130.867188 208.832031 135.695312 213.660156 L 141.328125 219.292969 L 143.257812 211.566406 C 145.410156 202.960938 153.109375 196.949219 161.980469 196.949219 L 165.925781 196.949219 C 162.992188 202.164062 161.425781 208.0625 161.425781 214.207031 C 161.425781 221.1875 162.542969 228.085938 164.75 234.710938 L 164.863281 235.042969 C 162.613281 239.738281 161.425781 244.914062 161.425781 250.273438 C 161.425781 257.253906 162.542969 264.152344 164.75 270.773438 L 164.863281 271.109375 C 162.613281 275.804688 161.425781 280.980469 161.425781 286.339844 C 161.425781 293.320312 162.542969 300.214844 164.75 306.839844 L 164.863281 307.175781 C 162.613281 311.867188 161.425781 317.042969 161.425781 322.402344 C 161.425781 327.800781 165.816406 332.191406 171.214844 332.191406 L 214.746094 332.191406 C 220.144531 332.191406 224.535156 327.800781 224.535156 322.402344 C 224.535156 317.042969 223.347656 311.867188 221.097656 307.171875 L 221.210938 306.839844 C 223.417969 300.214844 224.535156 293.320312 224.535156 286.339844 C 224.535156 280.980469 223.347656 275.804688 221.097656 271.109375 L 221.207031 270.777344 C 223.417969 264.152344 224.535156 257.253906 224.535156 250.273438 C 224.535156 244.914062 223.347656 239.738281 221.097656 235.046875 L 221.207031 234.710938 C 223.414062 228.089844 224.535156 221.191406 224.535156 214.210938 C 224.535156 208.066406 222.964844 202.164062 220.035156 196.949219 L 223.980469 196.949219 C 232.851562 196.949219 240.550781 202.960938 242.703125 211.570312 L 244.632812 219.292969 L 250.261719 213.664062 C 255.09375 208.832031 258.351562 202.851562 259.777344 196.335938 L 278.632812 210.472656 L 278.632812 201.457031 C 278.632812 191.984375 276.222656 182.84375 271.722656 174.753906 C 278.074219 177.566406 283.914062 181.554688 288.96875 186.613281 L 296.664062 194.308594 L 296.664062 183.425781 C 296.664062 171.734375 294.613281 160.285156 290.5625 149.355469 L 307.367188 153.558594 Z M 137.742188 201.597656 C 135.546875 197.707031 134.375 193.296875 134.375 188.707031 L 134.375 178.917969 L 117.386719 191.660156 C 119.074219 183.871094 122.765625 176.644531 128.195312 170.628906 C 131.191406 170.148438 134.246094 169.902344 137.339844 169.902344 L 143.394531 169.902344 L 143.394531 173.421875 L 146.808594 174.273438 C 155.03125 176.332031 162.175781 181.195312 167.09375 187.933594 L 161.980469 187.933594 C 151.847656 187.933594 142.761719 193.277344 137.742188 201.597656 Z M 139.019531 127.773438 C 142.449219 125.847656 146.332031 124.820312 150.371094 124.820312 C 153.957031 124.820312 157.546875 125.667969 160.757812 127.273438 L 174.523438 134.15625 L 163.777344 107.289062 C 170.4375 108.617188 176.363281 112.53125 180.214844 118.304688 L 183.964844 123.933594 L 192.980469 110.410156 L 201.996094 123.933594 L 205.75 118.304688 C 209.597656 112.53125 215.527344 108.617188 222.1875 107.289062 L 211.441406 134.15625 L 225.207031 127.273438 C 228.414062 125.667969 232.007812 124.820312 235.59375 124.820312 C 239.632812 124.820312 243.515625 125.847656 246.945312 127.773438 C 234.050781 133.101562 223.503906 143.046875 217.429688 155.648438 C 213.617188 157.078125 209.949219 158.902344 206.507812 161.09375 L 206.507812 133.835938 L 179.457031 133.835938 L 179.457031 161.09375 C 176.015625 158.902344 172.347656 157.082031 168.535156 155.648438 C 162.457031 143.046875 151.914062 133.097656 139.019531 127.773438 Z M 177.652344 170.804688 L 188.472656 178.917969 L 188.472656 142.855469 L 197.488281 142.855469 L 197.488281 178.917969 L 208.308594 170.804688 C 215.628906 165.3125 224.457031 161.9375 233.554688 161.09375 L 233.554688 166.527344 C 222.332031 170.292969 213.023438 178.339844 207.683594 189.019531 L 207.308594 189.773438 L 205.183594 191.894531 C 203.988281 193.089844 202.925781 194.382812 201.996094 195.75 C 201.066406 194.382812 200.003906 193.089844 198.808594 191.894531 L 192.980469 186.066406 L 187.152344 191.894531 C 185.957031 193.089844 184.894531 194.382812 183.964844 195.75 C 183.035156 194.382812 181.972656 193.089844 180.777344 191.894531 L 178.652344 189.769531 L 178.277344 189.019531 C 172.9375 178.339844 163.628906 170.292969 152.410156 166.527344 L 152.410156 161.09375 C 161.503906 161.9375 170.332031 165.3125 177.652344 170.804688 Z M 197.488281 323.175781 L 188.472656 323.175781 L 188.472656 322.402344 C 188.472656 317.070312 190.046875 311.984375 192.980469 307.671875 C 195.910156 311.984375 197.488281 317.070312 197.488281 322.402344 Z M 179.363281 208.699219 L 178.136719 209.925781 C 174.578125 213.484375 172.171875 217.886719 171.09375 222.679688 C 170.664062 219.882812 170.441406 217.054688 170.441406 214.207031 C 170.441406 208.730469 172.105469 203.507812 175.195312 199.121094 C 177.5625 201.820312 179.003906 205.144531 179.363281 208.699219 Z M 192.980469 285.910156 C 192.050781 284.542969 190.988281 283.25 189.792969 282.054688 L 188.566406 280.828125 C 188.9375 277.148438 190.46875 273.71875 192.980469 270.972656 C 195.496094 273.71875 197.023438 277.148438 197.398438 280.828125 L 196.167969 282.054688 C 194.972656 283.25 193.910156 284.542969 192.980469 285.910156 Z M 196.167969 245.992188 C 194.972656 247.1875 193.910156 248.476562 192.980469 249.847656 C 192.050781 248.476562 190.988281 247.1875 189.792969 245.992188 L 188.566406 244.761719 C 188.9375 241.082031 190.46875 237.65625 192.980469 234.90625 C 195.496094 237.65625 197.023438 241.085938 197.398438 244.765625 Z M 183.964844 216.875 C 186.476562 219.621094 188.007812 223.050781 188.378906 226.730469 L 187.152344 227.960938 C 185.957031 229.15625 184.894531 230.445312 183.964844 231.816406 C 183.035156 230.445312 181.972656 229.15625 180.777344 227.960938 L 179.550781 226.730469 C 179.921875 223.050781 181.453125 219.621094 183.964844 216.875 Z M 183.964844 252.9375 C 186.476562 255.6875 188.007812 259.117188 188.378906 262.796875 L 187.152344 264.023438 C 185.957031 265.21875 184.894531 266.511719 183.964844 267.878906 C 183.035156 266.511719 181.972656 265.21875 180.777344 264.023438 L 179.550781 262.796875 C 179.921875 259.117188 181.453125 255.6875 183.964844 252.9375 Z M 205.183594 264.023438 C 203.988281 265.21875 202.925781 266.511719 201.996094 267.878906 C 201.066406 266.511719 200.003906 265.21875 198.808594 264.023438 L 197.582031 262.796875 C 197.957031 259.117188 199.484375 255.6875 201.996094 252.9375 C 204.511719 255.6875 206.039062 259.117188 206.414062 262.796875 Z M 205.183594 227.960938 C 203.988281 229.152344 202.925781 230.445312 201.996094 231.816406 C 201.066406 230.445312 200.003906 229.152344 198.808594 227.960938 L 197.582031 226.730469 C 197.957031 223.050781 199.484375 219.621094 201.996094 216.875 C 204.511719 219.621094 206.039062 223.050781 206.414062 226.730469 Z M 196.167969 209.925781 C 194.972656 211.121094 193.910156 212.414062 192.980469 213.78125 C 192.050781 212.414062 190.988281 211.121094 189.792969 209.925781 L 188.566406 208.699219 C 188.9375 205.019531 190.46875 201.589844 192.980469 198.84375 C 195.496094 201.589844 197.023438 205.019531 197.398438 208.699219 Z M 175.195312 235.183594 C 177.5625 237.882812 179.003906 241.207031 179.363281 244.765625 L 178.136719 245.992188 C 174.578125 249.550781 172.171875 253.949219 171.09375 258.742188 C 170.664062 255.945312 170.441406 253.117188 170.441406 250.273438 C 170.441406 244.792969 172.105469 239.574219 175.195312 235.183594 Z M 175.195312 271.246094 C 177.5625 273.949219 179.003906 277.269531 179.363281 280.828125 L 178.136719 282.054688 C 174.578125 285.613281 172.171875 290.015625 171.09375 294.808594 C 170.664062 292.011719 170.441406 289.183594 170.441406 286.335938 C 170.441406 280.859375 172.105469 275.636719 175.195312 271.246094 Z M 179.539062 298.941406 C 179.898438 295.230469 181.433594 291.773438 183.964844 289.003906 C 186.496094 291.769531 188.03125 295.230469 188.390625 298.941406 C 186.679688 300.859375 185.203125 302.933594 183.964844 305.132812 C 182.726562 302.933594 181.25 300.859375 179.539062 298.941406 Z M 197.570312 298.941406 C 197.929688 295.230469 199.464844 291.769531 201.996094 289.003906 C 204.527344 291.769531 206.0625 295.230469 206.421875 298.941406 C 204.710938 300.859375 203.234375 302.933594 201.996094 305.132812 C 200.761719 302.933594 199.28125 300.859375 197.570312 298.941406 Z M 207.824219 282.054688 L 206.597656 280.828125 C 206.957031 277.269531 208.398438 273.949219 210.765625 271.246094 C 213.855469 275.636719 215.519531 280.859375 215.519531 286.335938 C 215.519531 289.183594 215.296875 292.011719 214.867188 294.808594 C 213.789062 290.015625 211.382812 285.613281 207.824219 282.054688 Z M 207.824219 245.992188 L 206.597656 244.765625 C 206.957031 241.207031 208.398438 237.882812 210.765625 235.183594 C 213.855469 239.574219 215.519531 244.792969 215.519531 250.273438 C 215.519531 253.117188 215.296875 255.945312 214.867188 258.742188 C 213.789062 253.949219 211.382812 249.550781 207.824219 245.992188 Z M 207.824219 209.925781 L 206.597656 208.699219 C 206.957031 205.144531 208.398438 201.820312 210.765625 199.121094 C 213.855469 203.507812 215.519531 208.730469 215.519531 214.207031 C 215.519531 217.054688 215.296875 219.882812 214.867188 222.679688 C 213.789062 217.886719 211.382812 213.484375 207.824219 209.925781 Z M 170.441406 322.402344 C 170.441406 317.070312 172.015625 311.984375 174.949219 307.671875 C 177.878906 311.984375 179.457031 317.070312 179.457031 322.402344 L 179.457031 323.175781 L 171.214844 323.175781 C 170.789062 323.175781 170.441406 322.828125 170.441406 322.402344 Z M 214.746094 323.175781 L 206.503906 323.175781 L 206.503906 322.402344 C 206.503906 317.070312 208.082031 311.984375 211.011719 307.671875 C 213.945312 311.984375 215.519531 317.070312 215.519531 322.402344 C 215.519531 322.828125 215.171875 323.175781 214.746094 323.175781 Z M 268.574219 191.660156 L 251.585938 178.917969 L 251.585938 188.707031 C 251.585938 193.296875 250.417969 197.707031 248.21875 201.597656 C 243.199219 193.277344 234.113281 187.933594 223.980469 187.933594 L 218.867188 187.933594 C 223.785156 181.195312 230.929688 176.332031 239.15625 174.273438 L 242.570312 173.421875 L 242.570312 169.902344 L 248.625 169.902344 C 251.71875 169.902344 254.773438 170.148438 257.769531 170.628906 C 263.195312 176.644531 266.886719 183.871094 268.574219 191.660156 Z M 275.679688 136.34375 L 281.273438 150.324219 C 284.230469 157.710938 286.167969 165.371094 287.066406 173.199219 C 275.929688 165.199219 262.609375 160.886719 248.625 160.886719 L 242.570312 160.886719 L 242.570312 151.871094 L 238.0625 151.871094 C 235.277344 151.871094 232.496094 152.074219 229.75 152.472656 C 235.578125 144.34375 243.875 138.152344 253.5 134.945312 L 264.4375 131.300781 L 258.386719 125.246094 C 252.296875 119.160156 244.203125 115.804688 235.589844 115.804688 C 233.085938 115.804688 230.578125 116.105469 228.140625 116.683594 L 235.703125 97.773438 L 227.265625 97.773438 C 217.785156 97.773438 208.855469 101.59375 202.363281 108.226562 L 192.980469 94.152344 L 183.597656 108.226562 C 177.105469 101.59375 168.175781 97.773438 158.695312 97.773438 L 150.257812 97.773438 L 157.820312 116.683594 C 155.382812 116.105469 152.875 115.804688 150.371094 115.804688 C 141.757812 115.804688 133.664062 119.160156 127.574219 125.246094 L 121.523438 131.300781 L 132.460938 134.945312 C 142.085938 138.15625 150.382812 144.34375 156.214844 152.472656 C 153.464844 152.074219 150.683594 151.871094 147.898438 151.871094 L 143.390625 151.871094 L 143.390625 160.886719 L 137.335938 160.886719 C 123.355469 160.886719 110.03125 165.199219 98.894531 173.203125 C 99.796875 165.371094 101.730469 157.710938 104.6875 150.328125 L 110.28125 136.34375 L 92.132812 140.878906 C 95.648438 134.476562 101.316406 129.378906 108.226562 126.613281 L 118.667969 122.4375 L 115.585938 117.8125 C 110.632812 110.382812 103.722656 104.605469 95.671875 101.054688 C 100.46875 98.894531 105.683594 97.773438 111.027344 97.773438 L 111.3125 97.773438 C 116.867188 97.773438 122.421875 99.085938 127.386719 101.570312 L 143.390625 109.578125 L 143.390625 102.28125 C 143.390625 94.386719 141.515625 86.695312 137.929688 79.75 C 150.03125 79.929688 162.109375 82.871094 172.933594 88.28125 L 182.667969 93.148438 L 172.324219 62.121094 C 179.175781 63.359375 185.289062 67.316406 189.230469 73.226562 L 192.980469 78.851562 L 196.730469 73.226562 C 200.671875 67.316406 206.785156 63.359375 213.636719 62.121094 L 203.292969 93.148438 L 213.027344 88.28125 C 223.851562 82.871094 235.929688 79.929688 248.03125 79.75 C 244.445312 86.695312 242.570312 94.386719 242.570312 102.28125 L 242.570312 109.578125 L 258.574219 101.570312 C 263.539062 99.085938 269.097656 97.773438 274.648438 97.773438 L 274.933594 97.773438 C 280.277344 97.773438 285.492188 98.894531 290.289062 101.054688 C 282.238281 104.605469 275.328125 110.382812 270.375 117.8125 L 267.292969 122.4375 L 277.734375 126.613281 C 284.644531 129.378906 290.3125 134.476562 293.828125 140.878906 Z M 275.679688 136.34375 " fill-opacity="1" fill-rule="nonzero"/></g></g></g></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="220" zoomAndPan="magnify" viewBox="514 328 416 110" height="62" preserveAspectRatio="xMidYMid meet" version="1.0"><defs><g/><clipPath id="e3973c8914"><rect x="0" width="416" y="0" height="153"/></clipPath></defs><g transform="matrix(1, 0, 0, 1, 514, 328)"><g clip-path="url(#e3973c8914)"><g fill="#1c1c1c" fill-opacity="1"><g transform="translate(0.868107, 108.555585)"><g><path d="M 4.25 0 C 5.664062 -1.414062 6.601562 -3.539062 7.0625 -6.375 C 7.53125 -9.21875 7.742188 -12.410156 7.703125 -15.953125 C 7.671875 -19.503906 7.65625 -23.050781 7.65625 -26.59375 L 7.65625 -79.78125 C 7.65625 -83.320312 7.671875 -86.863281 7.703125 -90.40625 C 7.742188 -93.957031 7.53125 -97.148438 7.0625 -99.984375 C 6.601562 -102.828125 5.664062 -104.957031 4.25 -106.375 L 18.515625 -106.375 C 17.085938 -104.957031 16.144531 -102.828125 15.6875 -99.984375 C 15.226562 -97.148438 15.015625 -93.957031 15.046875 -90.40625 C 15.085938 -86.863281 15.109375 -83.320312 15.109375 -79.78125 L 15.109375 -2.65625 L 40 -2.65625 C 50.28125 -2.65625 58.1875 -3.257812 63.71875 -4.46875 C 69.25 -5.675781 73.113281 -6.953125 75.3125 -8.296875 L 75.3125 0 Z M 4.25 0 "/></g></g></g><g fill="#1c1c1c" fill-opacity="1"><g transform="translate(81.281045, 108.555585)"><g><path d="M 4.25 -106.375 L 18.515625 -106.375 C 17.085938 -104.957031 16.144531 -102.828125 15.6875 -99.984375 C 15.226562 -97.148438 15.015625 -93.957031 15.046875 -90.40625 C 15.085938 -86.863281 15.109375 -83.320312 15.109375 -79.78125 L 15.109375 -26.59375 C 15.109375 -23.050781 15.085938 -19.503906 15.046875 -15.953125 C 15.015625 -12.410156 15.226562 -9.21875 15.6875 -6.375 C 16.144531 -3.539062 17.085938 -1.414062 18.515625 0 L 4.25 0 C 5.664062 -1.414062 6.601562 -3.539062 7.0625 -6.375 C 7.53125 -9.21875 7.742188 -12.410156 7.703125 -15.953125 C 7.671875 -19.503906 7.65625 -23.050781 7.65625 -26.59375 L 7.65625 -79.78125 C 7.65625 -83.320312 7.671875 -86.863281 7.703125 -90.40625 C 7.742188 -93.957031 7.53125 -97.148438 7.0625 -99.984375 C 6.601562 -102.828125 5.664062 -104.957031 4.25 -106.375 Z M 4.25 -106.375 "/></g></g></g><g fill="#1c1c1c" fill-opacity="1"><g transform="translate(107.021779, 108.555585)"><g><path d="M 40.953125 -104.78125 C 32.367188 -104.78125 24.90625 -103.503906 18.5625 -100.953125 C 12.21875 -98.398438 6.738281 -94.390625 2.125 -88.921875 L 2.125 -99.890625 C 7.519531 -102.578125 13.671875 -104.503906 20.578125 -105.671875 C 27.492188 -106.847656 35.492188 -107.4375 44.578125 -107.4375 C 53.796875 -107.363281 61.859375 -106.742188 68.765625 -105.578125 C 75.679688 -104.410156 81.835938 -102.476562 87.234375 -99.78125 L 87.234375 -88.828125 C 82.691406 -94.285156 77.226562 -98.289062 70.84375 -100.84375 C 64.457031 -103.394531 56.976562 -104.671875 48.40625 -104.671875 L 48.40625 -26.59375 C 48.40625 -23.050781 48.382812 -19.503906 48.34375 -15.953125 C 48.3125 -12.410156 48.523438 -9.21875 48.984375 -6.375 C 49.441406 -3.539062 50.378906 -1.414062 51.796875 0 L 37.546875 0 C 38.960938 -1.414062 39.898438 -3.539062 40.359375 -6.375 C 40.828125 -9.21875 41.039062 -12.410156 41 -15.953125 C 40.96875 -19.503906 40.953125 -23.050781 40.953125 -26.59375 Z M 40.953125 -104.78125 "/></g></g></g><g fill="#1c1c1c" fill-opacity="1"><g transform="translate(199.347725, 108.555585)"><g><path d="M 5.84375 -53.1875 C 5.84375 -60.632812 7.132812 -67.632812 9.71875 -74.1875 C 12.3125 -80.75 16.054688 -86.53125 20.953125 -91.53125 C 25.847656 -96.53125 31.769531 -100.429688 38.71875 -103.234375 C 45.664062 -106.035156 53.503906 -107.4375 62.234375 -107.4375 C 70.953125 -107.4375 78.785156 -106.035156 85.734375 -103.234375 C 92.679688 -100.429688 98.601562 -96.53125 103.5 -91.53125 C 108.394531 -86.53125 112.132812 -80.75 114.71875 -74.1875 C 117.3125 -67.632812 118.609375 -60.632812 118.609375 -53.1875 C 118.609375 -45.738281 117.3125 -38.734375 114.71875 -32.171875 C 112.132812 -25.617188 108.394531 -19.84375 103.5 -14.84375 C 98.601562 -9.84375 92.679688 -5.941406 85.734375 -3.140625 C 78.785156 -0.335938 70.953125 1.0625 62.234375 1.0625 C 53.503906 1.0625 45.664062 -0.335938 38.71875 -3.140625 C 31.769531 -5.941406 25.847656 -9.84375 20.953125 -14.84375 C 16.054688 -19.84375 12.3125 -25.617188 9.71875 -32.171875 C 7.132812 -38.734375 5.84375 -45.738281 5.84375 -53.1875 Z M 13.828125 -53.1875 C 13.828125 -46.09375 14.976562 -39.425781 17.28125 -33.1875 C 19.59375 -26.945312 22.890625 -21.453125 27.171875 -16.703125 C 31.460938 -11.953125 36.566406 -8.242188 42.484375 -5.578125 C 48.410156 -2.921875 54.992188 -1.59375 62.234375 -1.59375 C 69.390625 -1.59375 75.734375 -2.742188 81.265625 -5.046875 C 86.796875 -7.359375 91.546875 -10.535156 95.515625 -14.578125 C 99.492188 -18.617188 102.6875 -23.207031 105.09375 -28.34375 C 107.507812 -33.488281 109.109375 -38.914062 109.890625 -44.625 C 110.671875 -50.332031 110.671875 -56.039062 109.890625 -61.75 C 109.109375 -67.457031 107.53125 -72.878906 105.15625 -78.015625 C 102.78125 -83.160156 99.601562 -87.753906 95.625 -91.796875 C 91.65625 -95.835938 86.882812 -99.007812 81.3125 -101.3125 C 75.75 -103.625 69.390625 -104.78125 62.234375 -104.78125 C 54.992188 -104.78125 48.410156 -103.445312 42.484375 -100.78125 C 36.566406 -98.125 31.460938 -94.4375 27.171875 -89.71875 C 22.890625 -85.007812 19.59375 -79.535156 17.28125 -73.296875 C 14.976562 -67.054688 13.828125 -60.351562 13.828125 -53.1875 Z M 13.828125 -53.1875 "/></g></g></g><g fill="#1c1c1c" fill-opacity="1"><g transform="translate(326.774488, 108.555585)"><g><path d="M 20.75 0 L 6.484375 0 C 7.898438 -1.414062 8.835938 -3.539062 9.296875 -6.375 C 9.765625 -9.21875 9.976562 -12.410156 9.9375 -15.953125 C 9.90625 -19.503906 9.890625 -23.050781 9.890625 -26.59375 L 9.890625 -95.421875 C 9.890625 -95.554688 9.957031 -95.726562 10.09375 -95.9375 C 10.238281 -96.15625 10.488281 -96.265625 10.84375 -96.265625 C 11.132812 -96.265625 11.382812 -96.175781 11.59375 -96 C 11.800781 -95.820312 11.941406 -95.664062 12.015625 -95.53125 C 12.367188 -95.03125 12.757812 -94.25 13.1875 -93.1875 C 13.613281 -92.125 14.019531 -91.078125 14.40625 -90.046875 C 14.800781 -89.015625 15.101562 -88.21875 15.3125 -87.65625 C 18.71875 -79.070312 22.492188 -70.648438 26.640625 -62.390625 C 30.796875 -54.128906 35.476562 -46.203125 40.6875 -38.609375 C 45.894531 -31.023438 51.742188 -24.003906 58.234375 -17.546875 C 64.722656 -11.097656 72.007812 -5.425781 80.09375 -0.53125 L 80.09375 0 L 64.25 0 C 56.945312 -7.445312 50.351562 -15.476562 44.46875 -24.09375 C 38.582031 -32.707031 33.40625 -41.5 28.9375 -50.46875 C 24.46875 -59.445312 20.601562 -68.15625 17.34375 -76.59375 L 17.34375 -26.59375 C 17.34375 -23.050781 17.320312 -19.503906 17.28125 -15.953125 C 17.25 -12.410156 17.460938 -9.21875 17.921875 -6.375 C 18.378906 -3.539062 19.320312 -1.414062 20.75 0 Z M 59.140625 -106.375 C 66.085938 -106.375 71.191406 -105.023438 74.453125 -102.328125 C 77.722656 -99.640625 79.359375 -96.0625 79.359375 -91.59375 C 79.359375 -87.050781 78.488281 -82.789062 76.75 -78.8125 C 75.007812 -74.84375 72.6875 -71.242188 69.78125 -68.015625 C 66.875 -64.796875 63.59375 -61.976562 59.9375 -59.5625 C 56.289062 -57.15625 52.550781 -55.1875 48.71875 -53.65625 C 44.882812 -52.132812 41.195312 -51.09375 37.65625 -50.53125 L 37.015625 -51.265625 C 44.035156 -53.609375 50.113281 -56.816406 55.25 -60.890625 C 60.394531 -64.972656 64.347656 -69.617188 67.109375 -74.828125 C 69.878906 -80.046875 71.265625 -85.488281 71.265625 -91.15625 C 71.265625 -94.84375 70.113281 -97.859375 67.8125 -100.203125 C 65.507812 -102.546875 62.160156 -103.71875 57.765625 -103.71875 L 35.3125 -103.71875 C 25.03125 -103.71875 17.125 -103.113281 11.59375 -101.90625 C 6.0625 -100.695312 2.195312 -99.421875 0 -98.078125 L 0 -106.375 Z M 59.140625 -106.375 "/></g></g></g></g></g><!-- removido --><g fill="#1c1c1c" style="display:none"><g transform="translate(0,999.699834)"><g><path d="M 3.546875 0 L 0.765625 0 L 8.796875 -21.859375 L 11.53125 -21.859375 L 19.546875 0 L 16.765625 0 L 14.578125 -6.1875 L 5.734375 -6.1875 Z M 6.578125 -8.53125 L 13.75 -8.53125 L 10.25 -18.390625 L 10.078125 -18.390625 Z M 6.578125 -8.53125 "/></g></g></g><!-- removido --><g fill="#1c1c1c" style="display:none"><g transform="translate(0,999.699834)"><g><path d="M 2.640625 0 L 2.640625 -21.859375 L 10.03125 -21.859375 C 11.738281 -21.859375 13.140625 -21.566406 14.234375 -20.984375 C 15.328125 -20.398438 16.132812 -19.601562 16.65625 -18.59375 C 17.1875 -17.582031 17.453125 -16.4375 17.453125 -15.15625 C 17.453125 -13.695312 17.117188 -12.425781 16.453125 -11.34375 C 15.785156 -10.269531 14.757812 -9.5 13.375 -9.03125 L 18.3125 0 L 15.234375 0 L 10.625 -8.546875 C 10.445312 -8.535156 10.265625 -8.53125 10.078125 -8.53125 L 5.296875 -8.53125 L 5.296875 0 Z M 5.296875 -10.921875 L 9.984375 -10.921875 C 11.734375 -10.921875 12.984375 -11.296875 13.734375 -12.046875 C 14.484375 -12.804688 14.859375 -13.84375 14.859375 -15.15625 C 14.859375 -16.46875 14.476562 -17.519531 13.71875 -18.3125 C 12.96875 -19.101562 11.707031 -19.5 9.9375 -19.5 L 5.296875 -19.5 Z M 5.296875 -10.921875 "/></g></g></g><!-- removido --><g fill="#1c1c1c" style="display:none"><g transform="translate(0,999.699834)"><g><path d="M 21.078125 -10.921875 C 21.078125 -8.878906 20.742188 -7.078125 20.078125 -5.515625 C 19.410156 -3.953125 18.5 -2.691406 17.34375 -1.734375 L 20.1875 2.046875 L 17.28125 2.046875 L 15.375 -0.515625 C 14.164062 0.0234375 12.851562 0.296875 11.4375 0.296875 C 9.570312 0.296875 7.914062 -0.15625 6.46875 -1.0625 C 5.019531 -1.976562 3.878906 -3.273438 3.046875 -4.953125 C 2.210938 -6.628906 1.796875 -8.617188 1.796875 -10.921875 C 1.796875 -13.234375 2.210938 -15.226562 3.046875 -16.90625 C 3.878906 -18.582031 5.019531 -19.875 6.46875 -20.78125 C 7.914062 -21.695312 9.570312 -22.15625 11.4375 -22.15625 C 13.300781 -22.15625 14.957031 -21.695312 16.40625 -20.78125 C 17.863281 -19.875 19.003906 -18.582031 19.828125 -16.90625 C 20.660156 -15.226562 21.078125 -13.234375 21.078125 -10.921875 Z M 10.578125 -6.828125 L 13.484375 -6.828125 L 15.8125 -3.765625 C 16.644531 -4.492188 17.300781 -5.457031 17.78125 -6.65625 C 18.269531 -7.851562 18.515625 -9.273438 18.515625 -10.921875 C 18.515625 -12.816406 18.203125 -14.414062 17.578125 -15.71875 C 16.953125 -17.019531 16.101562 -18.003906 15.03125 -18.671875 C 13.957031 -19.335938 12.757812 -19.671875 11.4375 -19.671875 C 10.113281 -19.671875 8.914062 -19.335938 7.84375 -18.671875 C 6.769531 -18.003906 5.921875 -17.019531 5.296875 -15.71875 C 4.671875 -14.414062 4.359375 -12.816406 4.359375 -10.921875 C 4.359375 -9.035156 4.671875 -7.441406 5.296875 -6.140625 C 5.921875 -4.835938 6.769531 -3.847656 7.84375 -3.171875 C 8.914062 -2.503906 10.113281 -2.171875 11.4375 -2.171875 C 12.28125 -2.171875 13.078125 -2.304688 13.828125 -2.578125 Z M 10.578125 -6.828125 "/></g></g></g><!-- removido --><g fill="#1c1c1c" style="display:none"><g transform="translate(0,999.699834)"><g><path d="M 16.984375 -21.859375 L 19.625 -21.859375 L 19.625 -7.390625 C 19.625 -5.742188 19.238281 -4.34375 18.46875 -3.1875 C 17.695312 -2.03125 16.664062 -1.144531 15.375 -0.53125 C 14.082031 0.0820312 12.671875 0.390625 11.140625 0.390625 C 9.597656 0.390625 8.179688 0.0820312 6.890625 -0.53125 C 5.609375 -1.144531 4.578125 -2.03125 3.796875 -3.1875 C 3.023438 -4.34375 2.640625 -5.742188 2.640625 -7.390625 L 2.640625 -21.859375 L 5.296875 -21.859375 L 5.296875 -7.390625 C 5.296875 -6.242188 5.566406 -5.273438 6.109375 -4.484375 C 6.648438 -3.703125 7.363281 -3.109375 8.25 -2.703125 C 9.132812 -2.296875 10.097656 -2.09375 11.140625 -2.09375 C 12.179688 -2.09375 13.144531 -2.296875 14.03125 -2.703125 C 14.914062 -3.109375 15.628906 -3.703125 16.171875 -4.484375 C 16.710938 -5.273438 16.984375 -6.242188 16.984375 -7.390625 Z M 16.984375 -21.859375 "/></g></g></g><!-- removido --><g fill="#1c1c1c" style="display:none"><g transform="translate(0,999.699834)"><g><path d="M 5.296875 -21.859375 L 5.296875 0 L 2.640625 0 L 2.640625 -21.859375 Z M 5.296875 -21.859375 "/></g></g></g><!-- removido --><g fill="#1c1c1c" style="display:none"><g transform="translate(0,999.699834)"><g><path d="M 1.453125 -19.5 L 1.453125 -21.859375 L 17.84375 -21.859375 L 17.84375 -19.5 L 10.96875 -19.5 L 10.96875 0 L 8.328125 0 L 8.328125 -19.5 Z M 1.453125 -19.5 "/></g></g></g><!-- removido --><g fill="#1c1c1c" style="display:none"><g transform="translate(0,999.699834)"><g><path d="M 2.640625 0 L 2.640625 -21.859375 L 15.828125 -21.859375 L 15.828125 -19.5 L 5.296875 -19.5 L 5.296875 -12.125 L 15.15625 -12.125 L 15.15625 -9.78125 L 5.296875 -9.78125 L 5.296875 -2.34375 L 16 -2.34375 L 16 0 Z M 2.640625 0 "/></g></g></g><!-- removido --><g fill="#1c1c1c" style="display:none"><g transform="translate(0,999.699834)"><g><path d="M 1.453125 -19.5 L 1.453125 -21.859375 L 17.84375 -21.859375 L 17.84375 -19.5 L 10.96875 -19.5 L 10.96875 0 L 8.328125 0 L 8.328125 -19.5 Z M 1.453125 -19.5 "/></g></g></g><!-- removido --><g fill="#1c1c1c" style="display:none"><g transform="translate(0,999.699834)"><g><path d="M 16.984375 -21.859375 L 19.625 -21.859375 L 19.625 -7.390625 C 19.625 -5.742188 19.238281 -4.34375 18.46875 -3.1875 C 17.695312 -2.03125 16.664062 -1.144531 15.375 -0.53125 C 14.082031 0.0820312 12.671875 0.390625 11.140625 0.390625 C 9.597656 0.390625 8.179688 0.0820312 6.890625 -0.53125 C 5.609375 -1.144531 4.578125 -2.03125 3.796875 -3.1875 C 3.023438 -4.34375 2.640625 -5.742188 2.640625 -7.390625 L 2.640625 -21.859375 L 5.296875 -21.859375 L 5.296875 -7.390625 C 5.296875 -6.242188 5.566406 -5.273438 6.109375 -4.484375 C 6.648438 -3.703125 7.363281 -3.109375 8.25 -2.703125 C 9.132812 -2.296875 10.097656 -2.09375 11.140625 -2.09375 C 12.179688 -2.09375 13.144531 -2.296875 14.03125 -2.703125 C 14.914062 -3.109375 15.628906 -3.703125 16.171875 -4.484375 C 16.710938 -5.273438 16.984375 -6.242188 16.984375 -7.390625 Z M 16.984375 -21.859375 "/></g></g></g><!-- removido --><g fill="#1c1c1c" style="display:none"><g transform="translate(0,999.699834)"><g><path d="M 2.640625 0 L 2.640625 -21.859375 L 10.03125 -21.859375 C 11.738281 -21.859375 13.140625 -21.566406 14.234375 -20.984375 C 15.328125 -20.398438 16.132812 -19.601562 16.65625 -18.59375 C 17.1875 -17.582031 17.453125 -16.4375 17.453125 -15.15625 C 17.453125 -13.695312 17.117188 -12.425781 16.453125 -11.34375 C 15.785156 -10.269531 14.757812 -9.5 13.375 -9.03125 L 18.3125 0 L 15.234375 0 L 10.625 -8.546875 C 10.445312 -8.535156 10.265625 -8.53125 10.078125 -8.53125 L 5.296875 -8.53125 L 5.296875 0 Z M 5.296875 -10.921875 L 9.984375 -10.921875 C 11.734375 -10.921875 12.984375 -11.296875 13.734375 -12.046875 C 14.484375 -12.804688 14.859375 -13.84375 14.859375 -15.15625 C 14.859375 -16.46875 14.476562 -17.519531 13.71875 -18.3125 C 12.96875 -19.101562 11.707031 -19.5 9.9375 -19.5 L 5.296875 -19.5 Z M 5.296875 -10.921875 "/></g></g></g><!-- removido --><g fill="#1c1c1c" style="display:none"><g transform="translate(0,999.699834)"><g><path d="M 3.546875 0 L 0.765625 0 L 8.796875 -21.859375 L 11.53125 -21.859375 L 19.546875 0 L 16.765625 0 L 14.578125 -6.1875 L 5.734375 -6.1875 Z M 6.578125 -8.53125 L 13.75 -8.53125 L 10.25 -18.390625 L 10.078125 -18.390625 Z M 6.578125 -8.53125 "/></g></g></g></svg>
+    <div class="logo-sub">Arquitetura</div>
+  </div>
+  <div class="hd"></div>
+  <h1 class="hh">Seu projeto<br><em>começa aqui</em></h1>
+  <p class="hp">Responda em poucos passos e receba<br>uma estimativa personalizada agora</p>
+</div>
+
+<div class="prog-wrap">
+  <div class="prog-bar"><div class="prog-fill" id="pF"></div></div>
+  <span class="prog-lbl" id="pL">1 / 8</span>
+</div>
+
+<!-- S1 Tipo -->
+<div class="step active" id="step1">
+  <p class="se">01 · Tipo de projeto</p>
+  <h2 class="sq">O que você quer construir ou transformar?</h2>
+  <p class="sh">Escolha o que melhor descreve sua necessidade.</p>
+  <div class="cards">
+    <div class="card" onclick="sel(this,'tipo','residencia')"><span class="ck">✓</span><span class="ci">🏠</span><div class="ct">Residência Unifamiliar</div><div class="cd">Casa nova do zero, projeto completo</div></div>
+    <div class="card" onclick="sel(this,'tipo','estudio')"><span class="ck">✓</span><span class="ci">🏗</span><div class="ct">Estúdios / Unidades Compactas</div><div class="cd">Múltiplas unidades, investimento ou locação</div></div>
+    <div class="card" onclick="sel(this,'tipo','reforma')"><span class="ck">✓</span><span class="ci">🔨</span><div class="ct">Reforma & Retrofit</div><div class="cd">Revitalizar, ampliar ou modernizar o existente</div></div>
+    <div class="card" onclick="sel(this,'tipo','interiores')"><span class="ck">✓</span><span class="ci">🛋</span><div class="ct">Interiores & Decoração</div><div class="cd">Projeto de ambientes internos com identidade</div></div>
+  </div>
+  <p class="avi" id="av1">Selecione uma opção.</p>
+  <button class="bav" onclick="av(1)">Continuar</button>
+</div>
+
+<!-- S2 Área -->
+<div class="step" id="step2">
+  <p class="se">02 · Dimensões</p>
+  <h2 class="sq">Qual a área aproximada do projeto?</h2>
+  <p class="sh">Arraste para sentir o tamanho.</p>
+  <div class="an" id="aN">80 m²</div>
+  <div class="ar" id="aR">equivale a um apartamento de 2 quartos</div>
+  <input type="range" id="aS" min="30" max="500" value="80" step="10" oninput="updA(this.value)">
+  <div class="sl"><span>30 m²</span><span>500 m²</span></div>
+  <div class="av"><p class="avl">Representação visual</p>
+    <div class="cw"><canvas id="aC" width="280" height="160"></canvas><div class="ct2" id="aT">80 m²</div></div>
+    <div class="comps" id="aCP"></div>
+  </div>
+  <button class="bav" onclick="av(2)">Continuar</button>
+  <button class="bvt" onclick="vt(2)">← Voltar</button>
+</div>
+
+<!-- S3 Local -->
+<div class="step" id="step3">
+  <p class="se">03 · Contexto</p>
+  <h2 class="sq">Onde fica o terreno e qual a urgência?</h2>
+  <p class="sh">Logística e disponibilidade de agenda.</p>
+  <div class="campo"><label class="cl">Cidade / Estado</label><input type="text" class="fi" id="cidade" placeholder="Ex: Fortaleza, CE"></div>
+  <div class="campo"><label class="cl">Quando precisa começar?</label>
+    <select class="fs" id="prazo"><option value="">Selecione...</option><option value="imediato">O mais rápido possível</option><option value="1mes">Em até 1 mês</option><option value="3meses">Em 2 a 3 meses</option><option value="planejando">Ainda estou planejando</option></select>
+  </div>
+  <p class="avi" id="av3">Preencha cidade e prazo.</p>
+  <button class="bav" onclick="av(3)">Continuar</button>
+  <button class="bvt" onclick="vt(3)">← Voltar</button>
+</div>
+
+<!-- S4 Estilo -->
+<div class="step" id="step4">
+  <p class="se">04 · Identidade</p>
+  <h2 class="sq">Que atmosfera você quer criar?</h2>
+  <p class="sh">Escolha o estilo que mais ressoa com o seu sonho.</p>
+  <div class="cards">
+    <div class="card" onclick="sel(this,'estilo','regional')"><span class="ck">✓</span><span class="ci">🏺</span><div class="ct">Regional Nordestino</div><div class="cd">Barro, taipa, palha — alma pura do lugar</div></div>
+    <div class="card" onclick="sel(this,'estilo','mediterraneo')"><span class="ck">✓</span><span class="ci">🌊</span><div class="ct">Mediterrâneo / Caiado</div><div class="cd">Cal branca, arcos, frescor litorâneo</div></div>
+    <div class="card" onclick="sel(this,'estilo','mexicano')"><span class="ck">✓</span><span class="ci">🌵</span><div class="ct">Mexicano / Adobe</div><div class="cd">Paredes grossas, pátios, sombra e cor terra</div></div>
+    <div class="card" onclick="sel(this,'estilo','tropical')"><span class="ck">✓</span><span class="ci">🌴</span><div class="ct">Tropical / Orgânico</div><div class="cd">Vegetação integrada, madeira, ventilação natural</div></div>
+    <div class="card" onclick="sel(this,'estilo','minimalista')"><span class="ck">✓</span><span class="ci">◻</span><div class="ct">Minimalista Costeiro</div><div class="cd">Formas puras, paleta neutra, luz protagonista</div></div>
+    <div class="card" onclick="sel(this,'estilo','rustico')"><span class="ck">✓</span><span class="ci">🪵</span><div class="ct">Rústico Contemporâneo</div><div class="cd">Pedra aparente, madeira bruta, artesanal</div></div>
+    <div class="card" onclick="sel(this,'estilo','bioclimatico')"><span class="ck">✓</span><span class="ci">🌬️</span><div class="ct">Bioclimático / Sustentável</div><div class="cd">Brises, pé-direito alto — conforto pelo projeto</div></div>
+    <div class="card" onclick="sel(this,'estilo','misto')"><span class="ck">✓</span><span class="ci">✦</span><div class="ct">Misto / Descobrir juntos</div><div class="cd">Tenho referências mas quero explorar</div></div>
+  </div>
+  <button class="bav" onclick="av(4)">Continuar</button>
+  <button class="bvt" onclick="vt(4)">← Voltar</button>
+</div>
+
+<!-- S5 Orçamento obra -->
+<div class="step" id="step5">
+  <p class="se">05 · Investimento</p>
+  <h2 class="sq">Qual o orçamento previsto para a obra?</h2>
+  <p class="sh">O projeto custa uma fração disso — isso nos ajuda a dimensionar o escopo.</p>
+  <div class="cards dois">
+    <div class="card" onclick="sel(this,'orc','ate150')"><span class="ck">✓</span><div class="ct">Até R$ 150 mil</div><div class="cd">Projeto enxuto e funcional</div></div>
+    <div class="card" onclick="sel(this,'orc','150a400')"><span class="ck">✓</span><div class="ct">R$ 150k – R$ 400k</div><div class="cd">Intermediário, mais recursos</div></div>
+    <div class="card" onclick="sel(this,'orc','400a800')"><span class="ck">✓</span><div class="ct">R$ 400k – R$ 800k</div><div class="cd">Alto padrão, liberdade de projeto</div></div>
+    <div class="card" onclick="sel(this,'orc','acima800')"><span class="ck">✓</span><div class="ct">Acima de R$ 800 mil</div><div class="cd">Sem restrições de escopo</div></div>
+  </div>
+  <button class="bav" onclick="av(5)">Continuar</button>
+  <button class="bvt" onclick="vt(5)">← Voltar</button>
+</div>
+
+<!-- S6 Segurança -->
+<div class="step" id="step6">
+  <p class="se">06 · Confiança</p>
+  <h2 class="sq">O que faria você se sentir seguro para fechar?</h2>
+  <p class="sh">Pode marcar mais de uma opção.</p>
+  <div class="sg">
+    <div class="seg-card" onclick="tS(this,'portfolio')"><span class="ck">✓</span><div class="st">Ver o portfólio de projetos anteriores</div><div class="sd">Quero ver exemplos reais do trabalho</div></div>
+    <div class="seg-card" onclick="tS(this,'reuniao')"><span class="ck">✓</span><div class="st">Uma reunião de apresentação sem compromisso</div><div class="sd">Preciso sentir a conexão antes de decidir</div></div>
+    <div class="seg-card" onclick="tS(this,'contrato')"><span class="ck">✓</span><div class="st">Entender como funciona o contrato e etapas</div><div class="sd">Quero clareza sobre prazos e entregas</div></div>
+    <div class="seg-card" onclick="tS(this,'depoimentos')"><span class="ck">✓</span><div class="st">Depoimentos de clientes anteriores</div><div class="sd">A experiência de quem já passou por isso</div></div>
+    <div class="seg-card" onclick="tS(this,'visita')"><span class="ck">✓</span><div class="st">Uma visita técnica ao terreno primeiro</div><div class="sd">Quero que o arquiteto conheça o espaço</div></div>
+    <div class="seg-card" onclick="tS(this,'valor')"><span class="ck">✓</span><div class="st">Clareza total sobre os valores cobrados</div><div class="sd">Sem surpresas — quero saber exatamente o que pago</div></div>
+  </div>
+  <div class="sl2"><textarea id="segL" placeholder="Tem algo mais que te daria segurança? Escreva aqui..."></textarea></div>
+  <p class="avi" id="av6">Selecione ao menos uma opção ou escreva no campo.</p>
+  <button class="bav" onclick="av(6)">Continuar</button>
+  <button class="bvt" onclick="vt(6)">← Voltar</button>
+</div>
+
+<!-- S7 Contato -->
+<div class="step" id="step7">
+  <p class="se">07 · Contato</p>
+  <h2 class="sq">Quase lá — como posso te chamar?</h2>
+  <p class="sh">Seus dados ficam só entre nós.</p>
+  <div class="campo"><label class="cl">Seu nome</label><input type="text" class="fi" id="nome" placeholder="Como posso te chamar?"></div>
+  <div class="campo"><label class="cl">WhatsApp</label><input type="tel" class="fi" id="wpp" placeholder="(85) 9 0000-0000"></div>
+  <div class="campo"><label class="cl">Email (opcional)</label><input type="email" class="fi" id="email" placeholder="para receber a proposta por email"></div>
+  <div class="campo"><label class="cl">Conte mais sobre o projeto (opcional)</label><textarea class="ft" id="desc" placeholder="Referência, detalhe do terreno, necessidade especial..."></textarea></div>
+  <p class="avi" id="av5">Preencha nome e WhatsApp.</p>
+  <button class="bav" onclick="gerar()">Ver minha estimativa →</button>
+  <button class="bvt" onclick="vt(7)">← Voltar</button>
+</div>
+
+<!-- S8 Resultado -->
+<div class="step" id="step8">
+  <div class="rh">
+    <p class="rt">ESTIMATIVA PERSONALIZADA · LITOR ARQUITETURA</p>
+    <h2 class="rn" id="rNome"></h2>
+    <p class="rl" id="rLocal"></p>
+  </div>
+  <div class="rrow"><span class="rlbl">Tipo de projeto</span><span class="rval" id="rTipo"></span></div>
+  <div class="rrow"><span class="rlbl">Área estimada</span><span class="rval" id="rArea"></span></div>
+  <div class="rrow"><span class="rlbl">Linguagem / estilo</span><span class="rval" id="rEstilo"></span></div>
+  <div class="rrow"><span class="rlbl">Prazo de início</span><span class="rval" id="rPrazo"></span></div>
+  <div class="rrow"><span class="rlbl">Para fechar, precisa de</span><span class="rval" id="rSeg" style="font-size:13px;"></span></div>
+  <div class="rtotal">
+    <div><p class="rtl">Honorários estimados<span>Projeto arquitetônico completo</span></p></div>
+    <div class="rtv" id="rVal"></div>
+  </div>
+  <p class="robs" id="rObs"></p>
+  <div class="orn">· · ·</div>
+
+  <button class="btn-prop" onclick="mostrarProposta()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    Ver Proposta Completa
+  </button>
+  <a class="btn-wpp" id="btnW" href="#" target="_blank">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    Falar com o Arquiteto
+  </a>
+  <button class="btn-novo" onclick="reset()">Novo orçamento</button>
+  <div class="save-status" id="saveStatus"></div>
+</div>
+
+</div><!-- /wrap -->
+</div><!-- /telaFormulario -->
+
+<!-- ══════════════════════
+     TELA 2 — PROPOSTA
+══════════════════════ -->
+<div id="telaProposta">
+<div class="prop-wrap">
+
+  <!-- Ações fixas no topo da proposta -->
+  <div class="prop-acoes" style="position:sticky;top:0;background:var(--off);padding:16px 0;z-index:50;border-bottom:1px solid var(--borda);margin-bottom:0;">
+    <button class="btn-voltar2" onclick="voltarFormulario()">← Voltar</button>
+    <button class="btn-imprimir" onclick="window.print()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Imprimir / Salvar PDF
+    </button>
+    <a class="btn-wpp2" id="btnW2" href="#" target="_blank">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Enviar ao Cliente
+    </a>
+    <div class="save-status2" id="saveStatus2" style="width:100%;"></div>
+  </div>
+
+  <!-- CAPA -->
+  <div class="prop-capa">
+    <div class="prop-header-top">
+      <div>
+        <div class="prop-logo-nome">LITOR</div>
+        <div class="prop-logo-sub">Arquitetura</div>
+      </div>
+      <div class="prop-doc-info">
+        <div class="prop-doc-tipo">Proposta Comercial</div>
+        <div class="prop-doc-num" id="pDocNum">Nº 001/2025</div>
+      </div>
+    </div>
+
+    <div class="prop-capa-centro">
+      <p class="prop-pre">Proposta de Projeto Arquitetônico</p>
+      <h1 class="prop-titulo">Sua obra,<br><em>com estratégia</em><br>e identidade.</h1>
+      <div class="prop-para">
+        <div class="prop-para-nome" id="pNome">Cliente</div>
+        <div class="prop-para-det" id="pDet"></div>
+      </div>
+    </div>
+
+    <div class="prop-capa-rodape">
+      <div class="prop-data" id="pData"></div>
+      <div class="prop-validade">Proposta válida por <strong>15 dias</strong></div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 1 — Quem somos -->
+  <div class="ps">
+    <p class="ps-eye">01 · Quem somos</p>
+    <h2 class="ps-h">Arquitetura que<br><em>pertence ao lugar</em></h2>
+    <p class="ps-p">A LITOR é um escritório de arquitetura litorânea nordestina especializado em transformar terrenos e espaços em projetos com <strong>alma, identidade e estratégia</strong>. Cada projeto nasce do encontro entre a sabedoria construtiva local — barro, palha, madeira, pedra — e uma sensibilidade contemporânea que respeita o clima, a vista e quem vai viver naquele espaço.</p>
+    <p class="ps-p">Não fazemos projetos genéricos. Fazemos projetos que só poderiam existir <strong>naquele terreno, naquele litoral, para aquele cliente</strong>.</p>
+
+    <div class="prop-manifesto">
+      <div class="prop-manifesto-txt">"Antes de desenhar a casa, nós desenhamos a decisão. Uma obra sem projeto é uma decisão sem estratégia."</div>
+      <div class="prop-manifesto-ref">— LITOR Arquitetura</div>
+    </div>
+
+    <div class="prop-grid">
+      <div class="pg-item">
+        <span class="pg-ico">🏛</span>
+        <div class="pg-t">Projetos Residenciais</div>
+        <div class="pg-d">Casas unifamiliares, sobrados e casas de praia com identidade regional</div>
+      </div>
+      <div class="pg-item">
+        <span class="pg-ico">🏗</span>
+        <div class="pg-t">Estúdios & Investimento</div>
+        <div class="pg-d">Unidades compactas para locação de temporada no litoral nordestino</div>
+      </div>
+      <div class="pg-item">
+        <span class="pg-ico">🔨</span>
+        <div class="pg-t">Reforma & Retrofit</div>
+        <div class="pg-d">Revitalização de imóveis existentes com projeto estratégico e valorização real</div>
+      </div>
+      <div class="pg-item destaque">
+        <span class="pg-ico">🌴</span>
+        <div class="pg-t">Consultoria de Terreno</div>
+        <div class="pg-d">Análise estratégica antes da compra — evita erros que custam muito mais</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 2 — O que está incluso / não incluso -->
+  <div class="ps">
+    <p class="ps-eye">02 · Escopo do projeto</p>
+    <h2 class="ps-h">O que você recebe —<br><em>e o que não está incluso</em></h2>
+    <p class="ps-p">Transparência é parte do nosso método. Antes de assinar qualquer contrato, você precisa saber exatamente o que está comprando — e o que não está.</p>
+
+    <div class="prop-listas">
+      <div class="pl sim">
+        <p class="pl-titulo">✓ &nbsp;Está incluso</p>
+        <div class="pl-item"><span class="dot dot-v"></span><span>Projeto arquitetônico completo (plantas baixas, cortes, fachadas)</span></div>
+        <div class="pl-item"><span class="dot dot-v"></span><span>Memorial descritivo com especificação de materiais</span></div>
+        <div class="pl-item"><span class="dot dot-v"></span><span>Análise solar e de ventilação natural</span></div>
+        <div class="pl-item"><span class="dot dot-v"></span><span>Perspectivas 3D ilustrativas do projeto</span></div>
+        <div class="pl-item"><span class="dot dot-v"></span><span>Acompanhamento em reuniões de revisão (até 2 rodadas)</span></div>
+        <div class="pl-item"><span class="dot dot-v"></span><span>Arquivo digital em PDF e DWG para execução</span></div>
+        <div class="pl-item"><span class="dot dot-v"></span><span>Suporte para aprovação municipal (orientação técnica)</span></div>
+      </div>
+      <div class="pl nao">
+        <p class="pl-titulo">✗ &nbsp;Não está incluso</p>
+        <div class="pl-item"><span class="dot dot-r"></span><span>Projetos complementares (estrutural, elétrico, hidráulico)</span></div>
+        <div class="pl-item"><span class="dot dot-r"></span><span>Levantamento topográfico e sondagem do terreno</span></div>
+        <div class="pl-item"><span class="dot dot-r"></span><span>Taxas e emolumentos de aprovação municipal</span></div>
+        <div class="pl-item"><span class="dot dot-r"></span><span>Execução da obra (administração e gestão de obras)</span></div>
+        <div class="pl-item"><span class="dot dot-r"></span><span>Mobiliário, decoração e compras</span></div>
+        <div class="pl-item"><span class="dot dot-r"></span><span>Laudos e certificações de terceiros</span></div>
+      </div>
+    </div>
+
+    <p class="ps-p" style="margin-top:8px;padding:16px 20px;background:var(--fundo);border-left:2px solid var(--areia);">Os projetos complementares podem ser contratados separadamente com parceiros indicados pela LITOR. Consulte disponibilidade.</p>
+  </div>
+
+  <!-- SEÇÃO 3 — Como trabalhamos -->
+  <div class="ps">
+    <p class="ps-eye">03 · Nosso método</p>
+    <h2 class="ps-h">Da conversa ao projeto —<br><em>passo a passo</em></h2>
+    <p class="ps-p">Nossa metodologia transforma a sua ideia em um projeto executável, sem surpresas e com decisões claras em cada etapa.</p>
+
+    <div class="prop-etapas">
+      <div class="pe">
+        <div class="pe-num">01</div>
+        <div>
+          <div class="pe-t">Briefing & Análise do Terreno</div>
+          <div class="pe-d">Entendemos profundamente suas necessidades, restrições e sonhos. Analisamos o terreno, orientação solar, ventos dominantes e regulamentação municipal. <strong>Aqui nasceu a sua obra.</strong></div>
+        </div>
+      </div>
+      <div class="pe">
+        <div class="pe-num">02</div>
+        <div>
+          <div class="pe-t">Estudo Preliminar</div>
+          <div class="pe-d">Apresentamos o conceito espacial, partido arquitetônico e zoneamento do programa. Você vê a lógica do projeto antes de entrar nos detalhes. <strong>Aqui você aprova a direção.</strong></div>
+        </div>
+      </div>
+      <div class="pe">
+        <div class="pe-num">03</div>
+        <div>
+          <div class="pe-t">Anteprojeto</div>
+          <div class="pe-d">Desenvolvemos plantas definitivas, cortes, fachadas e primeiras perspectivas 3D. Definimos materiais, acabamentos e linguagem estética. <strong>Aqui o projeto toma forma.</strong></div>
+        </div>
+      </div>
+      <div class="pe">
+        <div class="pe-num">04</div>
+        <div>
+          <div class="pe-t">Projeto Executivo</div>
+          <div class="pe-d">Detalhamos tudo o que o construtor precisa para executar: cotas, especificações, detalhes construtivos e memoriais. <strong>Aqui a obra pode começar.</strong></div>
+        </div>
+      </div>
+      <div class="pe">
+        <div class="pe-num">05</div>
+        <div>
+          <div class="pe-t">Entrega & Suporte</div>
+          <div class="pe-d">Entregamos o arquivo completo em PDF e DWG, com orientações para aprovação e indicação de profissionais complementares. <strong>Aqui você está pronto.</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 4 — Valores -->
+  <div class="ps">
+    <p class="ps-eye">04 · Investimento</p>
+    <h2 class="ps-h">Seu projeto,<br><em>com valor definido</em></h2>
+    <p class="ps-p">Trabalhamos com honorários transparentes, definidos antes de começar. Você sabe exatamente o que paga — e o que recebe em troca.</p>
+
+    <div class="prop-valor-box">
+      <p class="pvb-pre">Estimativa de honorários</p>
+      <p class="pvb-projeto" id="pvProjeto"></p>
+      <div class="pvb-val" id="pvVal"></div>
+      <div class="pvb-div"></div>
+      <div class="pvb-pgto">
+        <div class="pvb-p">
+          <p class="pvb-p-num">Entrada · na assinatura</p>
+          <p class="pvb-p-pct">50%</p>
+          <p class="pvb-p-txt" id="pvEntrada">Valor na assinatura do contrato. Garante o início imediato do projeto.</p>
+        </div>
+        <div class="pvb-p">
+          <p class="pvb-p-num">Conclusão · na entrega</p>
+          <p class="pvb-p-pct">50%</p>
+          <p class="pvb-p-txt" id="pvFinal">Valor na entrega do projeto executivo completo. Só paga quando está satisfeito com o resultado.</p>
+        </div>
+      </div>
+      <p class="pvb-obs">* Este valor é uma estimativa baseada nas informações fornecidas. O valor exato é definido após briefing presencial ou por videochamada. Parcelamentos podem ser negociados para projetos acima de R$ 20.000.</p>
+    </div>
+
+    <div class="prop-entregas">
+      <div class="pent">
+        <p class="pent-n">Prazo estimado</p>
+        <p class="pent-v" id="pvPrazo">30–60 dias</p>
+        <p class="pent-d">do briefing à entrega do executivo</p>
+      </div>
+      <div class="pent">
+        <p class="pent-n">Revisões inclusas</p>
+        <p class="pent-v">2 rodadas</p>
+        <p class="pent-d">de ajustes sem custo adicional</p>
+      </div>
+      <div class="pent">
+        <p class="pent-n">Formato de entrega</p>
+        <p class="pent-v">PDF + DWG</p>
+        <p class="pent-d">arquivos para execução e aprovação</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA FINAL -->
+  <div class="prop-cta">
+    <h2 class="prop-cta-h">Pronto para começar?</h2>
+    <p class="prop-cta-p">A próxima etapa é uma conversa. Sem compromisso, sem burocracia — só você, eu e o seu projeto. Em 30 minutos já conseguimos entender se faz sentido avançar juntos.<br><br>Entre em contato e vamos marcar.</p>
+    <div class="prop-cta-contato">
+      <div class="prop-cta-item">📱 <strong>+55 (85) 99155-8990</strong> — WhatsApp</div>
+      <div class="prop-cta-item">📸 <strong>@litor.arq</strong> — Instagram</div>
+      <div class="prop-cta-item">📍 <strong>Fortaleza, CE</strong> — Atende todo o litoral nordestino</div>
+    </div>
+  </div>
+
+  <!-- Rodapé -->
+  <div class="prop-footer">
+    <div>
+      <div class="pf-logo">LITOR</div>
+      <div style="font-size:8px;letter-spacing:4px;text-transform:uppercase;color:var(--areia);margin-top:4px;font-family:'Jost',sans-serif;font-weight:300;">Arquitetura</div>
+    </div>
+    <div class="pf-info" id="pfInfo"></div>
+  </div>
+
+</div><!-- /prop-wrap -->
+</div><!-- /telaProposta -->
+
+<script>
+// ══ CONFIG ═══════════════════════════════════
+const WPP = '5585991558990';
+const DRIVE_FOLDER_ID = '1isYBVMXoDNYm_L3Mqnw3a32B8H5Rqqsr';
+
+// ══ DADOS ════════════════════════════════════
+const D = {
+  tipo:null,area:80,cidade:'',prazo:'',
+  estilo:null,orc:null,seg:[],segL:'',
+  nome:'',wpp:'',email:'',desc:''
+};
+const TOT = 8;
+
+// ══ LABELS ═══════════════════════════════════
+const TL={residencia:'Residência Unifamiliar',estudio:'Estúdios / Unidades Compactas',reforma:'Reforma & Retrofit',interiores:'Interiores & Decoração'};
+const EL={regional:'Regional Nordestino',mediterraneo:'Mediterrâneo / Caiado',mexicano:'Mexicano / Adobe',tropical:'Tropical / Orgânico',minimalista:'Minimalista Costeiro',rustico:'Rústico Contemporâneo',bioclimatico:'Bioclimático / Sustentável',misto:'A definir com o arquiteto'};
+const PL={imediato:'O mais rápido possível','1mes':'Em até 1 mês','3meses':'Em 2–3 meses',planejando:'Ainda planejando'};
+const SL={portfolio:'Portfólio',reuniao:'Reunião s/ compromisso',contrato:'Contrato e etapas',depoimentos:'Depoimentos',visita:'Visita técnica',valor:'Clareza de valores'};
+const REFS=[{max:40,t:'como um quarto de hotel'},{max:55,t:'como um estúdio compacto'},{max:75,t:'como um apto de 1 quarto'},{max:110,t:'como um apto de 2 quartos'},{max:150,t:'como uma casa de 3 quartos'},{max:220,t:'como uma casa ampla'},{max:320,t:'como um sobrado de alto padrão'},{max:999,t:'como uma grande residência'}];
+const COMPS=[{a:30,l:'Studio 30m²'},{a:60,l:'Apt 60m²'},{a:120,l:'Casa 120m²'},{a:250,l:'Sobrado 250m²'},{a:500,l:'Mansão 500m²'}];
+
+// ══ PROGRESS ═════════════════════════════════
+function upd(n){document.getElementById('pF').style.width=((n-1)/(TOT-1)*100)+'%';document.getElementById('pL').textContent=n+' / '+TOT;}
+function show(n){document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));document.getElementById('step'+n).classList.add('active');upd(n);window.scrollTo({top:0,behavior:'smooth'});}
+
+// ══ SELEÇÃO ══════════════════════════════════
+function sel(el,f,v){el.parentElement.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');D[f]=v;}
+function tS(el,v){el.classList.toggle('msel');D.seg=el.classList.contains('msel')?[...D.seg.filter(x=>x!==v),v]:D.seg.filter(x=>x!==v);}
+function s(id){document.getElementById(id).style.display='block';}
+function h(id){document.getElementById(id).style.display='none';}
+
+// ══ ÁREA / CANVAS ═════════════════════════════
+function updA(v){
+  v=parseInt(v);D.area=v;
+  document.getElementById('aN').textContent=v+' m²';
+  document.getElementById('aT').textContent=v+' m²';
+  const r=REFS.find(x=>v<=x.max);
+  document.getElementById('aR').textContent=r?r.t:'';
+  draw(v);updC(v);
+}
+function draw(a){
+  const cv=document.getElementById('aC'),ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#F4F1EC';ctx.fillRect(0,0,W,H);
+  const r=Math.min(a/500,1);
+  const rW=40+(W-56)*Math.sqrt(r),rH=26+(H-42)*Math.sqrt(r);
+  const x=(W-rW)/2,y=(H-rH)/2;
+  ctx.shadowColor='rgba(63,74,60,.1)';ctx.shadowBlur=14;
+  ctx.fillStyle='#3F4A3C';ctx.fillRect(x,y,rW,rH);
+  ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(244,241,236,.2)';ctx.lineWidth=1;
+  ctx.strokeRect(x+4,y+4,rW-8,rH-8);
+  if(a>60){
+    ctx.strokeStyle='rgba(244,241,236,.08)';ctx.lineWidth=.5;
+    const cols=Math.max(2,Math.floor(rW/30)),rows=Math.max(1,Math.floor(rH/26));
+    for(let i=1;i<cols;i++){ctx.beginPath();ctx.moveTo(x+i*(rW/cols),y+4);ctx.lineTo(x+i*(rW/cols),y+rH-4);ctx.stroke();}
+    for(let j=1;j<rows;j++){ctx.beginPath();ctx.moveTo(x+4,y+j*(rH/rows));ctx.lineTo(x+rW-4,y+j*(rH/rows));ctx.stroke();}
+  }
+}
+function updC(a){document.getElementById('aCP').innerHTML=COMPS.map(c=>`<span class="comp${Math.abs(c.a-a)<55?' on':''}">${c.l}</span>`).join('');}
+
+// ══ NAVEGAÇÃO ════════════════════════════════
+function av(c){
+  if(c===1){if(!D.tipo){s('av1');return;}h('av1');}
+  if(c===3){
+    const ci=document.getElementById('cidade').value.trim();
+    const pr=document.getElementById('prazo').value;
+    if(!ci||!pr){s('av3');return;}
+    D.cidade=ci;D.prazo=pr;h('av3');
+  }
+  if(c===6){
+    D.segL=document.getElementById('segL').value.trim();
+    if(!D.seg.length&&!D.segL){s('av6');return;}
+    h('av6');
+  }
+  show(c+1);
+}
+function vt(c){show(c-1);}
+
+// ══ CÁLCULO ══════════════════════════════════
+function calc(){
+  let mn,mx;
+  switch(D.tipo){case'residencia':mn=55;mx=90;break;case'estudio':mn=45;mx=75;break;case'reforma':mn=40;mx=65;break;default:mn=50;mx=80;}
+  const f=D.orc==='ate150'?.85:D.orc==='400a800'?1.15:D.orc==='acima800'?1.3:1;
+  return{min:Math.round(D.area*mn*f/500)*500,max:Math.round(D.area*mx*f/500)*500};
+}
+function brl(v){return'R$ '+v.toLocaleString('pt-BR');}
+function brl2(v){return'R$\u00a0'+v.toLocaleString('pt-BR');}
+
+// ══ GERAR ORÇAMENTO ══════════════════════════
+function gerar(){
+  const nm=document.getElementById('nome').value.trim();
+  const wp=document.getElementById('wpp').value.trim();
+  if(!nm||!wp){s('av5');return;}h('av5');
+  D.nome=nm;D.wpp=wp;
+  D.email=document.getElementById('email').value.trim();
+  D.desc=document.getElementById('desc').value.trim();
+  D.segL=document.getElementById('segL').value.trim();
+
+  const v=calc();
+  const segTxt=[...D.seg.map(x=>SL[x]),...(D.segL?['"'+D.segL+'"']:[])].join(' · ')||'—';
+
+  // Preencher resultado step 8
+  document.getElementById('rNome').textContent=nm+', aqui está sua estimativa';
+  document.getElementById('rLocal').textContent='Projeto em '+D.cidade;
+  document.getElementById('rTipo').textContent=TL[D.tipo]||'—';
+  document.getElementById('rArea').textContent=D.area+' m²';
+  document.getElementById('rEstilo').textContent=EL[D.estilo]||'A definir';
+  document.getElementById('rPrazo').textContent=PL[D.prazo]||'—';
+  document.getElementById('rSeg').textContent=segTxt;
+  document.getElementById('rVal').textContent=brl(v.min)+' – '+brl(v.max);
+  document.getElementById('rObs').textContent=D.tipo==='reforma'?'* Reformas variam conforme complexidade. Valor final após visita técnica.':D.tipo==='estudio'?'* Unidades em série podem ter desconto progressivo.':'* Estimativa baseada em honorários regionais CAU/BR.';
+
+  // Link WhatsApp
+  const msg=gerarMsgWpp(v,segTxt);
+  document.getElementById('btnW').href='https://wa.me/'+WPP+'?text='+encodeURIComponent(msg);
+  document.getElementById('btnW2').href='https://wa.me/'+WPP+'?text='+encodeURIComponent(msg);
+
+  show(8);
+
+  // Salvar no Drive automaticamente
+  salvarNoDrive(v,segTxt);
+}
+
+function gerarMsgWpp(v,segTxt){
+  return`Olá, Daniel! Preenchi o formulário da LITOR e quero conversar sobre meu projeto.
+
+*Nome:* ${D.nome}
+*WhatsApp:* ${D.wpp}${D.email?'\n*Email:* '+D.email:''}
+*Tipo:* ${TL[D.tipo]}
+*Área:* ${D.area} m²
+*Cidade:* ${D.cidade}
+*Estilo:* ${EL[D.estilo]||'A definir'}
+*Prazo:* ${PL[D.prazo]}
+*Orçamento para obra:* ${D.orc}
+*Para fechar preciso de:* ${D.seg.map(x=>SL[x]).join(', ')||'—'}${D.segL?'\n*Em minhas palavras:* "'+D.segL+'"':''}
+*Estimativa recebida:* ${brl(v.min)} – ${brl(v.max)}${D.desc?'\n\n*Sobre o projeto:* '+D.desc:''}`;
+}
+
+// ══ PROPOSTA ═════════════════════════════════
+function mostrarProposta(){
+  const v=calc();
+  const hoje=new Date();
+  const opcoes={day:'numeric',month:'long',year:'numeric'};
+  const dataStr=hoje.toLocaleDateString('pt-BR',opcoes);
+  const num=String(Math.floor(Math.random()*900)+100).padStart(3,'0');
+
+  document.getElementById('pDocNum').textContent='Nº '+num+'/'+hoje.getFullYear();
+  document.getElementById('pNome').textContent=D.nome;
+  document.getElementById('pDet').textContent=(TL[D.tipo]||'')+(D.cidade?' · '+D.cidade:'')+' · '+D.area+' m²';
+  document.getElementById('pData').textContent='Fortaleza, '+dataStr;
+  document.getElementById('pvProjeto').textContent=(TL[D.tipo]||'')+' · '+D.area+' m² · '+(EL[D.estilo]||'Estilo a definir');
+  document.getElementById('pvVal').textContent=brl(v.min)+' – '+brl(v.max);
+
+  const entrada50min=Math.round(v.min*0.5/100)*100;
+  const entrada50max=Math.round(v.max*0.5/100)*100;
+  const final50min=Math.round(v.min*0.5/100)*100;
+  const final50max=Math.round(v.max*0.5/100)*100;
+
+  document.getElementById('pvEntrada').textContent=brl(entrada50min)+' – '+brl(entrada50max)+' na assinatura do contrato. Garante o início imediato do projeto.';
+  document.getElementById('pvFinal').textContent=brl(final50min)+' – '+brl(final50max)+' na entrega do projeto executivo completo.';
+
+  const prazoMap={residencia:'45–60 dias',estudio:'30–45 dias',reforma:'30–45 dias',interiores:'20–30 dias'};
+  document.getElementById('pvPrazo').textContent=prazoMap[D.tipo]||'30–60 dias';
+  document.getElementById('pfInfo').innerHTML=`Proposta ${document.getElementById('pDocNum').textContent}<br>${dataStr}<br>Válida por 15 dias`;
+
+  document.getElementById('telaFormulario').style.display='none';
+  document.getElementById('telaProposta').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function voltarFormulario(){
+  document.getElementById('telaProposta').style.display='none';
+  document.getElementById('telaFormulario').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ══ SALVAR NO DRIVE ══════════════════════════
+async function salvarNoDrive(v,segTxt){
+  const status=document.getElementById('saveStatus');
+  status.textContent='Salvando no Drive...';status.className='save-status';
+
+  const dataHora=new Date().toLocaleString('pt-BR');
+  const conteudo=`LITOR ARQUITETURA — ORÇAMENTO DE CLIENTE
+================================================
+Data/Hora: ${dataHora}
+
+DADOS DO CLIENTE
+----------------
+Nome: ${D.nome}
+WhatsApp: ${D.wpp}
+${D.email?'Email: '+D.email+'\n':''}
+
+PROJETO
+----------------
+Tipo: ${TL[D.tipo]||'—'}
+Área: ${D.area} m²
+Cidade: ${D.cidade}
+Estilo desejado: ${EL[D.estilo]||'A definir'}
+Prazo de início: ${PL[D.prazo]||'—'}
+Orçamento previsto para obra: ${D.orc||'—'}
+
+CONTEXTO DE FECHAMENTO
+----------------
+Para fechar, o cliente precisa de: ${D.seg.map(x=>SL[x]).join(', ')||'—'}
+${D.segL?'Em suas palavras: "'+D.segL+'"':''}
+
+ESTIMATIVA DE HONORÁRIOS
+----------------
+Mínimo: ${brl(v.min)}
+Máximo: ${brl(v.max)}
+Entrada (50%): ${brl(Math.round(v.min*0.5/100)*100)} – ${brl(Math.round(v.max*0.5/100)*100)}
+Conclusão (50%): ${brl(Math.round(v.min*0.5/100)*100)} – ${brl(Math.round(v.max*0.5/100)*100)}
+
+${D.desc?'OBSERVAÇÕES DO CLIENTE\n----------------\n'+D.desc:''}
+
+================================================
+Gerado automaticamente pelo sistema LITOR Arquitetura
+`;
+
+  const titulo=`[${dataHora.split(',')[0]}] ${D.nome} — ${TL[D.tipo]||'Projeto'} — ${D.cidade}`;
+
+  try {
+    const resp=await fetch('https://gmailmcp.googleapis.com/mcp/v1',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        method:'tools/call',
+        params:{
+          name:'create_draft',
+          arguments:{
+            to:'litor.arquitetura@gmail.com',
+            subject:'[NOVO ORÇAMENTO] '+titulo,
+            body:`Novo orçamento recebido pelo sistema LITOR.\n\n${conteudo}\n\nResponda ao cliente:\nWhatsApp: ${D.wpp}${D.email?'\nEmail: '+D.email:''}`
+          }
+        }
+      })
+    });
+    status.textContent='✓ Rascunho de email criado no Gmail';
+    status.className='save-status ok';
+  } catch(e) {
+    // fallback — tenta Drive diretamente via API
+  }
+
+  // Salvar no Google Drive
+  try {
+    const respDrive = await fetch('https://drivemcp.googleapis.com/mcp/v1', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        method: 'tools/call',
+        params: {
+          name: 'create_file',
+          arguments: {
+            title: titulo+'.txt',
+            textContent: conteudo,
+            contentMimeType: 'text/plain',
+            parentId: DRIVE_FOLDER_ID,
+            disableConversionToGoogleType: false
+          }
+        }
+      })
+    });
+    status.textContent='✓ Salvo na pasta LITOR — Orçamentos de Clientes';
+    status.className='save-status ok';
+    document.getElementById('saveStatus2').textContent='✓ Orçamento salvo no Google Drive';
+    document.getElementById('saveStatus2').className='save-status2 ok';
+  } catch(e){
+    status.textContent='Salvo localmente. Abra a proposta para compartilhar.';
+    status.className='save-status';
+  }
+}
+
+// ══ RESET ════════════════════════════════════
+function reset(){
+  D.tipo=null;D.estilo=null;D.orc=null;D.seg=[];D.segL='';
+  D.area=80;D.cidade='';D.prazo='';D.nome='';D.wpp='';D.email='';D.desc='';
+  document.querySelectorAll('.card,.seg-card').forEach(c=>c.classList.remove('sel','msel'));
+  document.getElementById('aS').value=80;updA(80);
+  ['cidade','nome','wpp','email','desc','segL'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('prazo').value='';
+  document.getElementById('saveStatus').textContent='';
+  show(1);
+}
+
+// ══ INIT ═════════════════════════════════════
+upd(1);
+setTimeout(()=>{draw(80);updC(80);},60);
+</script>
+</body>
+</html>
